@@ -199,10 +199,10 @@ export default function Home() {
             >
               <form onSubmit={handleRoast} className="space-y-8">
                 <div className="group">
-                  <p className="text-zinc-500 mb-4 font-medium">Identify the subject of analysis:</p>
+                  <p className="text-zinc-500 mb-4 font-medium">Identify the subject of analysis (username or owner/repo):</p>
                   <Input
                     type="text"
-                    placeholder="Username_or_Repo_Path"
+                    placeholder="e.g. facebook/react"
                     className="bg-transparent border-0 border-b-2 border-zinc-800 rounded-none h-16 text-3xl font-medium focus-visible:ring-0 focus-visible:border-white transition-all p-0 placeholder:text-zinc-900"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
