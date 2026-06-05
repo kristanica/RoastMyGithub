@@ -27,8 +27,7 @@ export class AIService {
     const prompt = `
       ${persona}
       Roast this developer's GitHub profile. 
-      IMPORTANT: Avoid overly flowery, 'deep', or editorial language. 
-      Be direct, punchy, and actually mean. Use common developer slang and sarcasm.
+      IMPORTANT: Avoid flowery or 'deep' language. Be direct, punchy, and actually mean. 
       
       Structure your response as a sequential narrative reveal. 
       Each "step" should be a sharp, devastating observation.
@@ -99,7 +98,7 @@ export class AIService {
     const prompt = `
       ${persona}
       Roast the repository "${repo.name}".
-      No flowery language. No deep analysis. Just mean, sarcastic, and direct technical insults.
+      No flowery language. Just mean, sarcastic, and direct technical insults.
       
       Output ONLY valid JSON:
       {
@@ -129,6 +128,80 @@ export class AIService {
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: "You are an analytical storyteller. Output ONLY valid JSON." },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" },
+      stream: true,
+    });
+  }
+
+  static async streamDependencyRoast(manifestContent: string, repoName: string, manifestType: string = 'package.json') {
+    const isManifest = !manifestType.includes("File List");
+    
+    const prompt = isManifest 
+      ? `
+      You are a senior system architect who hates unnecessary dependencies and bloated projects.
+      Your goal is to perform a "Dependency Hell" audit on the repository "${repoName}" based on its ${manifestType}.
+      
+      Be brutal. Mock their choice of libraries, outdated versions, and over-engineering. 
+      Identify "Ghost Dependencies" (things they probably don't use), "Security Theatre", and "Pure Bloat".
+
+      Output ONLY valid JSON:
+      {
+        "introduction": "A brutal hook about their dependency choices.",
+        "bloat_score": "0-100",
+        "analysis": [
+          {
+            "dependency": "The name of the package/lib",
+            "verdict": "A sharp, mean insult about why they have this.",
+            "impact": "The technical cost (bundle size, security, etc.)"
+          }
+        ],
+        "ghost_dependencies": [
+          { "name": "Dependency name", "reason": "Why it's likely unused" }
+        ],
+        "summary_remedy": "A concise 2-sentence reality check on how to unfuck this architecture.",
+        "verdict": "A final crushing judgment on their architecture."
+      }
+
+      Manifest Content (${manifestType}):
+      ${manifestContent.substring(0, 2000)}
+    `
+    : `
+      You are a senior system architect. You were asked to perform a dependency audit on "${repoName}", 
+      but this repository doesn't even have a standard manifest file (like package.json or requirements.txt).
+      
+      Roast their project structure and the fact that they are basically raw-dogging their dependencies or 
+      building a "portfolio" that's just a bunch of static files with no build system.
+      
+      Mock the files you see. If it's just index.html and some CSS, call it out for what it is: a 2005-era relic.
+
+      Output ONLY valid JSON:
+      {
+        "introduction": "A brutal hook about their lack of a real build system.",
+        "bloat_score": "0-10",
+        "analysis": [
+          {
+            "dependency": "The file or pattern you noticed",
+            "verdict": "A sharp, mean insult about why this is here.",
+            "impact": "Why this approach is amateur."
+          }
+        ],
+        "ghost_dependencies": [
+          { "name": "Standard Tooling", "reason": "They seem to have never heard of it." }
+        ],
+        "summary_remedy": "A concise 2-sentence reality check on how to enter the 2020s.",
+        "verdict": "A final crushing judgment on their lack of professional structure."
+      }
+
+      Files found in root:
+      ${manifestContent}
+    `;
+
+    return openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are a senior system architect. Output ONLY valid JSON." },
         { role: "user", content: prompt }
       ],
       response_format: { type: "json_object" },
@@ -195,10 +268,10 @@ export class AIService {
     const prompt = `
       You are hosting a "Technical Hearing" where four distinct judges debate the user's GitHub profile. 
       The judges are:
-      1. **elitist**: A condescending, brilliant senior dev. Dry, sarcastic, hates mediocrity.
-      2. **brogrammer**: Obsessed with scale and hype. Thinks everything is "mid" or "L".
-      3. **chaos**: A gremlin who loves technical debt and mockery.
-      4. **recruiter**: A soul-crushing HR bot who speaks in buzzwords but delivers brutal professional insults.
+      1. **The Gatekeeper**: A condescending, brilliant senior dev. Dry, sarcastic, hates mediocrity.
+      2. **The Hype Beast**: Obsessed with scale and hype. Thinks everything is "mid" or "L".
+      3. **The Chaos Gremlin**: A gremlin who loves technical debt and mockery.
+      4. **The Soul Crusher**: A soul-crushing HR bot who speaks in buzzwords but delivers brutal professional insults.
 
       They must argue with each other about the user's code, commits, and repos. 
       IMPORTANT: No flowery language. Direct technical insults and sarcasm.
@@ -223,7 +296,7 @@ export class AIService {
       - Repos: ${reposSummary}
       - Recent Commits: ${commitSummary}
 
-      Start the hearing. Make it a chaotic but technical chat. Use lowercase judge names in the JSON.
+      Start the hearing. Make it a chaotic but technical chat. Use lowercase judge names in the JSON (elitist, brogrammer, chaos, recruiter).
     `;
 
     return openai.chat.completions.create({

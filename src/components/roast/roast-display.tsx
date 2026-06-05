@@ -3,10 +3,13 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GitHubUser } from "@/types/github";
-import { Share2, Loader2, Sparkles, ChevronDown, Download } from "lucide-react";
+import {
+  Share2,
+  Loader2,
+  Download,
+} from "lucide-react";
 import { toPng } from "html-to-image";
 import { ReportCard } from "./report-card";
-
 import { WrappedDisplay } from "./wrapped-display";
 
 interface RoastDisplayProps {
@@ -14,6 +17,7 @@ interface RoastDisplayProps {
   user?: GitHubUser;
   isStreaming?: boolean;
   vibe?: string;
+  onShowWrapped?: () => void;
 }
 
 export function RoastDisplay({
@@ -21,6 +25,7 @@ export function RoastDisplay({
   user,
   isStreaming,
   vibe = "elitist",
+  onShowWrapped,
 }: RoastDisplayProps) {
   const introduction = roast?.introduction || "";
   const steps = roast?.steps || [];
@@ -30,10 +35,9 @@ export function RoastDisplay({
   const portfolioAudit = roast?.portfolio_audit;
   const [expandedReceipt, setExpandedReceipt] = useState<number | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [showWrapped, setShowWrapped] = useState(false);
   const [activeStep, setActiveStep] = useState<number>(-1);
   const reportCardRef = useRef<HTMLDivElement>(null);
-  
+
   const sectionRefs = useRef<any[]>([]);
 
   const scrollToSection = (index: number) => {
@@ -53,7 +57,7 @@ export function RoastDisplay({
           }
         });
       },
-      { threshold: 0.5, rootMargin: "-10% 0px -10% 0px" }
+      { threshold: 0.5, rootMargin: "-10% 0px -10% 0px" },
     );
 
     sectionRefs.current.forEach((ref) => {
@@ -75,27 +79,15 @@ export function RoastDisplay({
   const handleDownload = async () => {
     if (!reportCardRef.current || isDownloading) return;
     setIsDownloading(true);
-
-    // Give the DOM a moment to ensure the off-screen element is ready
     await new Promise((resolve) => setTimeout(resolve, 500));
-
     try {
       const options = {
         cacheBust: true,
         pixelRatio: 2,
         backgroundColor: "#000",
-        style: {
-          opacity: "1",
-          visibility: "visible",
-        },
+        style: { opacity: "1", visibility: "visible" },
       };
-
-      // Call once to "warm up" and ensure images/fonts are cached
-      await toPng(reportCardRef.current, options);
-
-      // Call again to get the final high-quality result
       const dataUrl = await toPng(reportCardRef.current, options);
-
       const link = document.createElement("a");
       link.download = `roast-${user?.login || "github"}.png`;
       link.href = dataUrl;
@@ -107,30 +99,35 @@ export function RoastDisplay({
     }
   };
 
+  const navItems = [
+    { label: "Intro", index: -1 },
+    ...steps.map((_: any, i: number) => ({ label: `0${i + 1}`, index: i })),
+    { label: "DNA", index: 100 },
+    { label: "Remedy", index: 101 },
+    { label: "Final", index: 102 },
+  ];
+
   return (
-    <div className="relative space-y-[30vh] pb-[20vh]">
-      {/* Cinematic Breadcrumbs */}
-      <div className="fixed right-8 top-1/2 -translate-y-1/2 z-[60] hidden md:flex flex-col gap-4">
-        {[
-          { label: "Intro", index: -1 },
-          ...steps.map((_: any, i: number) => ({ label: `0${i + 1}`, index: i })),
-          { label: "DNA", index: 100 },
-          { label: "Verdict", index: 102 }
-        ].map((item) => (
+    <div className="relative space-y-[30vh] pb-[20vh] text-left">
+      {/* Sidebar Navigation */}
+      <div className="fixed right-10 top-1/2 -translate-y-1/2 z-[60] hidden md:flex flex-col gap-6">
+        {navItems.map((item) => (
           <button
             key={item.index}
             onClick={() => scrollToSection(item.index)}
             className="group relative flex items-center justify-end gap-4"
           >
-            <span className={`text-[9px] font-black uppercase tracking-widest transition-all duration-500 ${activeStep === item.index ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'}`}>
-              {item.label}
-            </span>
-            <div className={`w-1.5 h-1.5 rounded-full transition-all duration-500 border border-white/10 ${activeStep === item.index ? 'bg-white scale-125' : 'bg-white/5'}`} />
+            {activeStep === item.index && (
+               <span className="text-[10px] font-black uppercase tracking-widest text-white">
+                  {item.index === -1 ? '00' : item.index >= 100 ? item.index - 99 + steps.length : (item.index + 1).toString().padStart(2, '0')}
+               </span>
+            )}
+            <div className={`w-1.5 h-1.5 rounded-full transition-all duration-500 ${activeStep === item.index ? 'bg-white scale-125' : 'border border-white/20 group-hover:border-white/40'}`} />
           </button>
         ))}
       </div>
 
-      {/* Introduction: The Hook */}
+      {/* Introduction */}
       {introduction && (
         <motion.div
           ref={(el) => { if (el) sectionRefs.current[-1] = el; }}
@@ -139,52 +136,21 @@ export function RoastDisplay({
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 1.5 }}
-          className="min-h-[60vh] flex flex-col justify-center gap-12"
+          className="min-h-[60vh] flex flex-col justify-center gap-16 max-w-5xl"
         >
-          <p className="text-4xl md:text-6xl font-bold leading-[1.1] tracking-tight text-white/90 italic">
-            {introduction}
-          </p>
-
-          {hireabilityScore && (
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 1 }}
-              className="p-8 border border-zinc-900 bg-zinc-950/50 space-y-4 max-w-xl"
-            >
-              <div className="flex justify-between items-end">
-                <span className="text-[10px] uppercase tracking-[0.4em] font-black text-zinc-500">
-                  Hireability_Assessment
-                </span>
-                <span className="text-4xl font-black text-white">
-                  {hireabilityScore}
-                  <span className="text-sm text-zinc-700">/100</span>
-                </span>
-              </div>
-              <div className="h-1 bg-zinc-900 w-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${hireabilityScore}%` }}
-                  transition={{ delay: 1.5, duration: 1 }}
-                  className="h-full bg-white"
-                />
-              </div>
-              {portfolioAudit && (
-                <p className="text-xs text-zinc-500 italic leading-relaxed">
-                  {portfolioAudit}
-                </p>
-              )}
-            </motion.div>
-          )}
-
-          <button 
-             onClick={() => scrollToSection(0)}
-             className="text-[9px] uppercase tracking-[0.4em] font-black text-zinc-800 hover:text-white transition-all text-left animate-pulse"
-          >Scroll_To_Begin_Audit</button>
+          <div className="relative flex items-center">
+             <div className="h-[1px] w-full bg-white/10" />
+             <span className="absolute left-0 bg-black pr-6 text-[10px] uppercase tracking-[0.8em] font-black text-zinc-600">The Hook</span>
+          </div>
+          <p className="text-4xl md:text-6xl font-bold leading-[1.1] tracking-tight text-white italic">{introduction}</p>
+          <button onClick={() => scrollToSection(0)} className="text-[9px] uppercase tracking-[0.4em] font-black text-zinc-800 hover:text-white transition-all text-left group flex items-center gap-6">
+             <span>Begin the Audit</span>
+             <div className="h-[1px] w-8 bg-zinc-900 group-hover:w-16 group-hover:bg-white transition-all duration-500" />
+          </button>
         </motion.div>
       )}
 
-      {/* Narrative Steps: The Analysis */}
+      {/* Steps */}
       <div className="space-y-[40vh]">
         {steps.map((step: any, i: number) => (
           <motion.div
@@ -195,69 +161,44 @@ export function RoastDisplay({
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-10%" }}
             transition={{ duration: 1.2, ease: [0.215, 0.61, 0.355, 1] }}
-            className="space-y-12"
+            className="space-y-16 max-w-5xl"
           >
-            <div className="flex items-center gap-6">
-              <span className="text-[10px] uppercase tracking-[0.6em] text-muted font-black">
-                Observation 0{i + 1}
-              </span>
-              <div className="h-[1px] flex-1 bg-zinc-900" />
+            <div className="relative flex items-center">
+               <div className="h-[1px] w-full bg-white/10" />
+               <span className="absolute left-0 bg-black pr-6 text-[10px] uppercase tracking-[0.8em] font-black text-zinc-600">Observation 0{i + 1}</span>
             </div>
-
-            <div className="space-y-8">
-              <h3 className="text-3xl md:text-5xl font-medium leading-tight text-white tracking-tight">
-                {step.content}
-              </h3>
-              {step.insight && (
-                <p className="text-xl md:text-2xl text-zinc-500 leading-relaxed max-w-3xl font-normal">
-                  {step.insight}
-                </p>
-              )}
-
-              {step.receipt && (
-                <div className="pt-2">
-                  <button
-                    onClick={() =>
-                      setExpandedReceipt(expandedReceipt === i ? null : i)
-                    }
-                    className="flex items-center gap-2 text-[9px] uppercase tracking-[0.2em] font-black text-zinc-800 hover:text-white transition-colors"
-                  >
-                    <span>
-                      {expandedReceipt === i
-                        ? "Hide_Evidence"
-                        : "Show_Evidence"}
-                    </span>
-                  </button>
-
-                  <AnimatePresence>
-                    {expandedReceipt === i && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -5 }}
-                        className="mt-4 p-4 bg-zinc-950 border border-zinc-900 font-mono text-[10px] text-zinc-500 max-w-lg"
-                      >
-                        <span className="text-zinc-700 mr-2">SOURCE:</span>
-                        {step.receipt}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
+            <div className="space-y-10">
+              <h3 className="text-3xl md:text-6xl font-bold leading-tight text-white tracking-tight italic">{step.content}</h3>
+              {step.insight && <p className="text-xl md:text-2xl text-zinc-500 leading-relaxed max-w-4xl font-normal">{step.insight}</p>}
+              
+              <div className="pt-4 space-y-6">
+                {step.receipt && (
+                  <div>
+                    <button onClick={() => setExpandedReceipt(expandedReceipt === i ? null : i)} className="text-[9px] uppercase tracking-[0.4em] font-black text-zinc-800 hover:text-white transition-colors">
+                      {expandedReceipt === i ? "Hide_Evidence" : "Show_Evidence"}
+                    </button>
+                    <AnimatePresence>
+                      {expandedReceipt === i && (
+                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                           <div className="mt-6 p-6 bg-zinc-950/50 border border-white/5 font-mono text-[10px] text-zinc-500 leading-relaxed">
+                              <span className="text-zinc-700 mr-4">REPOSITORIES_SIGNAL_ID:</span>{step.receipt}
+                           </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+                <button onClick={() => scrollToSection(i === steps.length - 1 ? 100 : i + 1)} className="text-[9px] uppercase tracking-[0.4em] font-black text-zinc-800 hover:text-white transition-all group flex items-center gap-6">
+                   <span>Next Observation</span>
+                   <div className="h-[1px] w-8 bg-zinc-900 group-hover:w-16 group-hover:bg-white transition-all duration-500" />
+                </button>
+              </div>
             </div>
-
-            <button 
-               onClick={() => scrollToSection(i === steps.length - 1 ? 100 : i + 1)}
-               className="text-[8px] uppercase tracking-[0.4em] font-black text-zinc-900 hover:text-white transition-all text-left group flex items-center gap-4"
-            >
-               <span>Next_Observation</span>
-               <div className="h-[1px] w-8 bg-zinc-900 group-hover:bg-white transition-all" />
-            </button>
           </motion.div>
         ))}
       </div>
 
-      {/* DNA Traits Section */}
+      {/* DNA Traits */}
       {dnaTraits.length > 0 && (
         <motion.div
           ref={(el) => { if (el) sectionRefs.current[100] = el; }}
@@ -265,51 +206,33 @@ export function RoastDisplay({
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="min-h-[40vh] flex flex-col justify-center space-y-16"
+          className="min-h-[40vh] flex flex-col justify-center space-y-20 max-w-5xl"
         >
-          <div className="flex items-center gap-6">
-            <span
-              className={`text-[10px] uppercase tracking-[0.6em] text-${accentColor} font-black`}
-            >
-              Technical_DNA
-            </span>
-            <div className={`h-[1px] flex-1 bg-zinc-900`} />
+          <div className="relative flex items-center">
+             <div className="h-[1px] w-full bg-white/10" />
+             <span className="absolute left-0 bg-black pr-6 text-[10px] uppercase tracking-[0.8em] font-black text-zinc-600">Technical DNA</span>
           </div>
-
-          <div className="grid md:grid-cols-3 gap-12">
+          <div className="grid md:grid-cols-3 gap-16">
             {dnaTraits.map((trait: any, i: number) => (
               <div key={i} className="space-y-6">
                 <div className="flex justify-between items-end">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                    {trait.name}
-                  </p>
-                  <p
-                    className={`text-xl font-black italic text-${accentColor}`}
-                  >
-                    {trait.value}%
-                  </p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{trait.name}</p>
+                  <p className="text-2xl font-bold italic text-white">{trait.value}%</p>
                 </div>
-                <div className="h-1 w-full bg-zinc-900 relative overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${trait.value}%` }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.5, duration: 1.5, ease: "easeOut" }}
-                    className={`absolute inset-y-0 left-0 bg-${accentColor}`}
-                  />
+                <div className="h-[1px] w-full bg-zinc-900 relative">
+                  <motion.div initial={{ width: 0 }} whileInView={{ width: `${trait.value}%` }} viewport={{ once: true }} transition={{ delay: 0.5, duration: 1.5, ease: "easeOut" }} className="absolute inset-y-0 left-0 bg-white" />
                 </div>
               </div>
             ))}
           </div>
-
-          <button 
-             onClick={() => scrollToSection(102)}
-             className="text-[9px] uppercase tracking-[0.4em] font-black text-zinc-800 hover:text-white transition-all text-left pt-12"
-          >Seal_The_Judgment</button>
+          <button onClick={() => scrollToSection(101)} className="text-[9px] uppercase tracking-[0.4em] font-black text-zinc-800 hover:text-white transition-all text-left group flex items-center gap-6">
+             <span>The Redemption Path</span>
+             <div className="h-[1px] w-8 bg-zinc-900 group-hover:w-16 group-hover:bg-white transition-all duration-500" />
+          </button>
         </motion.div>
       )}
 
-      {/* Summary Remedy: The Path to Redemption */}
+      {/* Summary Remedy */}
       {roast?.summary_remedy && (
         <motion.div
           ref={(el) => { if (el) sectionRefs.current[101] = el; }}
@@ -318,54 +241,39 @@ export function RoastDisplay({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 1.5 }}
-          className="min-h-[40vh] flex flex-col justify-center space-y-12"
+          className="min-h-[40vh] flex flex-col justify-center space-y-16 max-w-5xl"
         >
-          <div className="flex items-center gap-6">
-            <span className="text-[10px] uppercase tracking-[0.6em] text-zinc-600 font-black">
-              The Path To Redemption
-            </span>
-            <div className={`h-[1px] flex-1 bg-zinc-900`} />
+          <div className="relative flex items-center">
+             <div className="h-[1px] w-full bg-white/10" />
+             <span className="absolute left-0 bg-black pr-6 text-[10px] uppercase tracking-[0.8em] font-black text-zinc-600">The Path To Redemption</span>
           </div>
-
-          <div className="space-y-6">
-            <p className="text-2xl md:text-4xl text-white font-medium leading-relaxed max-w-4xl italic">
-              "{roast.summary_remedy}"
-            </p>
-            <p className="text-sm text-zinc-600 uppercase tracking-widest font-bold">
-              — Suggested_Course_Of_Action
-            </p>
+          <div className="space-y-8">
+            <p className="text-2xl md:text-5xl text-white font-bold leading-relaxed max-w-4xl italic">"{roast.summary_remedy}"</p>
+            <p className="text-xs text-zinc-600 uppercase tracking-widest font-black">— Suggested_Course_Of_Action</p>
           </div>
+          <button onClick={() => scrollToSection(102)} className="text-[9px] uppercase tracking-[0.4em] font-black text-zinc-800 hover:text-white transition-all text-left group flex items-center gap-6">
+             <span>Seal the Judgment</span>
+             <div className="h-[1px] w-8 bg-zinc-900 group-hover:w-16 group-hover:bg-white transition-all duration-500" />
+          </button>
         </motion.div>
       )}
 
-      {/* Top System Status Line */}
+      {/* System Status */}
       {isStreaming && !verdict && (
         <div className="fixed top-0 left-0 right-0 z-[100]">
-          <div className="h-[2px] w-full bg-zinc-900 overflow-hidden">
-            <motion.div 
-              initial={{ x: "-100%" }}
-              animate={{ x: "0%" }}
-              transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
-              className="h-full w-full opacity-50"
-              style={{ backgroundColor: accentColor.includes('#') ? accentColor : `var(--color-${accentColor})` }}
-            />
+          <div className="h-[1px] w-full bg-white/5 overflow-hidden">
+            <motion.div initial={{ x: "-100%" }} animate={{ x: "0%" }} transition={{ repeat: Infinity, duration: 3, ease: "linear" }} className="h-full w-full bg-white/40" />
           </div>
-          <div className="flex justify-end p-4">
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-3 px-3 py-1.5 bg-black/50 backdrop-blur-md border border-zinc-900 rounded-sm"
-            >
-              <Loader2 className="animate-spin text-zinc-600" size={10} />
-              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500">
-                Analyzing_Data_Stream <span className="animate-pulse">...</span>
-              </span>
+          <div className="flex justify-end p-8">
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-4 text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500 italic">
+              <Loader2 className="animate-spin" size={10} />
+              <span>Analyzing_Life_Choices <span className="animate-pulse">...</span></span>
             </motion.div>
           </div>
         </div>
       )}
 
-      {/* Final Verdict: The Cinematic Conclusion */}
+      {/* Final Verdict */}
       {verdict && (
         <motion.div
           ref={(el) => { if (el) sectionRefs.current[102] = el; }}
@@ -374,100 +282,27 @@ export function RoastDisplay({
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 2 }}
-          className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
+          className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden text-center"
         >
-          {/* Enhanced Heat Gradient */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,0,0,0.08),transparent_70%)] pointer-events-none animate-pulse" />
-          
-          {/* Scanning Line Effect */}
-          <motion.div 
-            initial={{ top: "-10%" }}
-            whileInView={{ top: "110%" }}
-            viewport={{ once: true }}
-            transition={{ duration: 3, ease: "easeInOut", repeat: Infinity, repeatDelay: 2 }}
-            className="absolute left-0 right-0 h-[1px] bg-red-500/20 shadow-[0_0_20px_rgba(255,0,0,0.5)] z-10 pointer-events-none"
-          />
-
-          <motion.span
-            initial={{ opacity: 0, letterSpacing: "1.5em" }}
-            whileInView={{ opacity: 1, letterSpacing: "1em" }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.5, duration: 1.5, ease: "easeOut" }}
-            className="text-[10px] uppercase text-zinc-600 mb-12 block font-black text-center"
-          >
-            The Final Verdict
-          </motion.span>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            whileInView={{ opacity: 1, scale: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ 
-              delay: 0.8, 
-              duration: 1.2, 
-              ease: [0.16, 1, 0.3, 1] // Custom cubic-bezier for a "sharp" feel
-            }}
-            className="text-center px-4 relative z-20"
-          >
-            <h2 className="text-3xl md:text-6xl lg:text-7xl font-black tracking-tighter leading-[0.95] text-white italic uppercase break-words max-w-5xl mx-auto selection:bg-red-500 selection:text-white">
-              {verdict}
-              <motion.span 
-                animate={{ opacity: [1, 0, 1] }} 
-                transition={{ duration: 0.2, repeat: Infinity, repeatDelay: 3 }}
-                className="text-red-600 not-italic"
-              >.</motion.span>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.03),transparent_70%)] pointer-events-none" />
+          <motion.span initial={{ opacity: 0, letterSpacing: "1.5em" }} whileInView={{ opacity: 1, letterSpacing: "0.8em" }} viewport={{ once: true }} transition={{ delay: 0.5, duration: 1.5, ease: "easeOut" }} className="text-[10px] uppercase text-zinc-600 mb-16 block font-black">The Final Verdict</motion.span>
+          <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} whileInView={{ opacity: 1, scale: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.8, duration: 1.2, ease: [0.16, 1, 0.3, 1] }} className="px-4 relative z-20">
+            <h2 className="text-3xl md:text-7xl font-bold tracking-tighter leading-[0.95] text-white italic uppercase break-words max-w-5xl mx-auto">
+              {verdict}<span className="text-zinc-800 not-italic">.</span>
             </h2>
           </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 2.5, duration: 1 }}
-            className="mt-24 flex flex-col items-center gap-12"
-          >
-            <button
-              onClick={() => setShowWrapped(true)}
-              className="group flex flex-col items-center gap-4 text-muted hover:text-white transition-all duration-500"
-            >
-              <div className="p-4 rounded-full border border-zinc-800 group-hover:border-white transition-colors bg-white/5 animate-pulse group-hover:animate-none">
-                <Share2 size={24} />
-              </div>
-              <span className="text-[10px] uppercase tracking-[0.4em] font-black">
-                Reveal_My_Story
-              </span>
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 2.5, duration: 1 }} className="mt-24 flex flex-col items-center gap-12">
+            <button onClick={onShowWrapped} className="group flex flex-col items-center gap-4 text-zinc-600 hover:text-white transition-all duration-500">
+              <div className="p-4 rounded-full border border-zinc-900 group-hover:border-white transition-colors bg-white/5 animate-pulse group-hover:animate-none"><Share2 size={20} /></div>
+              <span className="text-[10px] uppercase tracking-[0.4em] font-black">Reveal My Story</span>
             </button>
-
-            <button
-              onClick={handleDownload}
-              disabled={isDownloading}
-              className="group flex items-center gap-3 text-[9px] uppercase tracking-[0.2em] font-black text-zinc-600 hover:text-white transition-all disabled:opacity-50"
-            >
-              {isDownloading ? (
-                <Loader2 className="animate-spin" size={14} />
-              ) : (
-                <Download size={14} />
-              )}
-              <span>
-                {isDownloading ? "Generating_Asset..." : "Download_Audit_Card"}
-              </span>
+            <button onClick={handleDownload} disabled={isDownloading} className="text-[9px] uppercase tracking-[0.4em] font-black text-zinc-700 hover:text-white transition-all disabled:opacity-30">
+              {isDownloading ? "Generating Asset..." : "Download Audit Card"}
             </button>
           </motion.div>
         </motion.div>
       )}
 
-      <AnimatePresence>
-        {showWrapped && (
-          <WrappedDisplay
-            user={user}
-            roast={roast}
-            vibe={vibe}
-            onClose={() => setShowWrapped(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Off-screen Report Card for Image Generation */}
       <ReportCard ref={reportCardRef} user={user} roast={roast} vibe={vibe} />
     </div>
   );

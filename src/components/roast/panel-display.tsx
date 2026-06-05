@@ -3,7 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GitHubUser } from "@/types/github";
-import { Loader2, Terminal, ShieldAlert, Cpu, HardDrive, Network } from "lucide-react";
+import {
+  Loader2,
+  Terminal,
+  ShieldAlert,
+  Cpu,
+  HardDrive,
+  Network,
+} from "lucide-react";
 
 interface PanelDisplayProps {
   panelData: any;
@@ -11,38 +18,60 @@ interface PanelDisplayProps {
   isStreaming?: boolean;
 }
 
-const JUDGE_CONFIG: Record<string, { label: string; accent: string; icon: any }> = {
-  elitist: { label: "JUDGE_ELITIST", accent: "#ffffff", icon: <ShieldAlert size={14} /> },
-  brogrammer: { label: "JUDGE_BRO", accent: "#00f2ff", icon: <Cpu size={14} /> },
-  chaos: { label: "JUDGE_CHAOS", accent: "#ff003c", icon: <HardDrive size={14} /> },
-  recruiter: { label: "JUDGE_RECRUITER", accent: "#3b82f6", icon: <Network size={14} /> },
+const JUDGE_CONFIG: Record<
+  string,
+  { label: string; accent: string; icon: any }
+> = {
+  elitist: {
+    label: "THE GATEKEEPER",
+    accent: "#ffffff",
+    icon: <ShieldAlert size={14} />,
+  },
+  brogrammer: {
+    label: "THE HYPE BEAST",
+    accent: "#a1a1aa",
+    icon: <Cpu size={14} />,
+  },
+  chaos: {
+    label: "THE CHAOS GREMLIN",
+    accent: "#a1a1aa",
+    icon: <HardDrive size={14} />,
+  },
+  recruiter: {
+    label: "THE SOUL CRUSHER",
+    accent: "#a1a1aa",
+    icon: <Network size={14} />,
+  },
 };
 
-export function PanelDisplay({ panelData, user, isStreaming }: PanelDisplayProps) {
+export function PanelDisplay({
+  panelData,
+  user,
+  isStreaming,
+}: PanelDisplayProps) {
   const dialogue = panelData?.dialogue || [];
   const [visibleDialogue, setVisibleDialogue] = useState<any[]>([]);
   const [isJudgeTyping, setIsJudgeTyping] = useState(false);
-  const [currentTypingJudge, setCurrentTypingJudge] = useState<string | null>(null);
+  const [currentTypingJudge, setCurrentTypingJudge] = useState<string | null>(
+    null,
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
-  const lastProcessedIndex = useRef(-1);
-
   const typingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sequential reveal logic
   useEffect(() => {
-    // If we have more messages to show and we aren't currently typing one
     if (dialogue.length > visibleDialogue.length && !isJudgeTyping) {
       const nextMessage = dialogue[visibleDialogue.length];
       if (!nextMessage) return;
 
       setIsJudgeTyping(true);
       setCurrentTypingJudge(nextMessage.judge?.toLowerCase());
-      
+
       const textLength = nextMessage.text?.length || 0;
-      const duration = Math.min(Math.max(textLength * 15, 800), 2000);
-      
+      const duration = Math.min(Math.max(textLength * 15, 600), 1800);
+
       typingTimerRef.current = setTimeout(() => {
-        setVisibleDialogue(prev => [...prev, nextMessage]);
+        setVisibleDialogue((prev) => [...prev, nextMessage]);
         setIsJudgeTyping(false);
         setCurrentTypingJudge(null);
         typingTimerRef.current = null;
@@ -50,7 +79,6 @@ export function PanelDisplay({ panelData, user, isStreaming }: PanelDisplayProps
     }
   }, [dialogue.length, visibleDialogue.length, isJudgeTyping]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
@@ -63,70 +91,57 @@ export function PanelDisplay({ panelData, user, isStreaming }: PanelDisplayProps
     }
   }, [visibleDialogue, isJudgeTyping]);
 
-  const allDialogueRevealed = dialogue.length > 0 && visibleDialogue.length === dialogue.length;
+  const allDialogueRevealed =
+    dialogue.length > 0 && visibleDialogue.length === dialogue.length;
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-12 pb-[20vh]">
+    <div className="w-full max-w-5xl mx-auto space-y-12 pb-[20vh] text-left">
       {/* Hearing Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center text-center space-y-4 pt-[10vh]"
+        className="flex flex-col justify-center space-y-12 pt-[10vh]"
       >
-        <div className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-full">
-           <Terminal size={14} className="text-zinc-500" />
-           <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white">System_Hearing_Active</span>
+        <div className="relative flex items-center">
+          <div className="h-[1px] w-full bg-white/10" />
+          <span className="absolute left-0 bg-black pr-6 text-[10px] uppercase tracking-[0.8em] font-black text-zinc-600">
+            Official Hearing
+          </span>
         </div>
-        <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white">
-          {panelData?.hearing_title || "Technical_Judgment_In_Session"}
+
+        <h1 className="text-3xl md:text-6xl font-black italic uppercase tracking-tighter text-white leading-[1.1]">
+          {panelData?.hearing_title || "Technical Judgment In Session"}
         </h1>
       </motion.div>
 
-      {/* Chat Terminal */}
-      <div 
-        ref={scrollRef}
-        className="min-h-[60vh] space-y-8 scroll-smooth"
-      >
+      {/* Chat Terminal / Transcript */}
+      <div ref={scrollRef} className="min-h-[50vh] space-y-10 scroll-smooth">
         <AnimatePresence mode="popLayout">
           {visibleDialogue.map((msg: any, i: number) => {
-            const judgeKey = msg.judge?.toLowerCase() || 'elitist';
+            const judgeKey = msg.judge?.toLowerCase() || "elitist";
             const config = JUDGE_CONFIG[judgeKey] || JUDGE_CONFIG.elitist;
-            const isLeftSide = judgeKey === 'elitist' || judgeKey === 'chaos';
-            
+
             return (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                className={`flex flex-col ${isLeftSide ? 'items-start' : 'items-end'} space-y-2`}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8 }}
+                className="space-y-3 border-l border-zinc-900 pl-8 ml-2"
               >
-                {/* Meta Alert */}
-                {msg.meta && (
-                  <div className="px-3 py-1 bg-red-500/10 border border-red-500/20 rounded-sm mb-2">
-                    <p className="text-[8px] font-black text-red-500 uppercase tracking-widest">{msg.meta}</p>
-                  </div>
-                )}
-
-                <div className={`flex items-start gap-4 max-w-[80%] ${isLeftSide ? 'flex-row' : 'flex-row-reverse text-right'}`}>
-                  <div 
-                    className="mt-1 p-2 rounded-lg border border-white/10 bg-zinc-900 shadow-xl shrink-0"
-                    style={{ color: config.accent }}
-                  >
-                    {config.icon}
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-zinc-500">{config.label}</p>
-                    <div 
-                      className={`p-5 rounded-2xl border ${isLeftSide ? 'rounded-tl-none' : 'rounded-tr-none'} bg-zinc-950 shadow-2xl transition-all duration-500`}
-                      style={{ borderColor: `${config.accent}22` }}
-                    >
-                      <p className="text-sm md:text-lg text-zinc-200 font-medium leading-relaxed italic">
-                        "{msg.text}"
-                      </p>
-                    </div>
-                  </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500 italic">
+                    {config.label}
+                  </span>
+                  {msg.meta && (
+                    <span className="text-[8px] font-black text-zinc-800 uppercase tracking-widest">
+                      [{msg.meta}]
+                    </span>
+                  )}
                 </div>
+                <p className="text-xl md:text-2xl text-zinc-400 font-medium leading-relaxed italic max-w-4xl">
+                  {msg.text}
+                </p>
               </motion.div>
             );
           })}
@@ -135,60 +150,72 @@ export function PanelDisplay({ panelData, user, isStreaming }: PanelDisplayProps
         {/* Dynamic Typing Indicator */}
         {isJudgeTyping && currentTypingJudge && (
           <motion.div
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0 }}
-            className={`flex items-center gap-4 ${currentTypingJudge === 'elitist' || currentTypingJudge === 'chaos' ? 'pl-12' : 'pr-12 flex-row-reverse text-right'}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center gap-4 pl-10"
           >
             <div className="flex gap-1">
-              <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1 h-1 rounded-full bg-zinc-500" />
-              <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1 h-1 rounded-full bg-zinc-500" />
-              <motion.div animate={{ opacity: [0.2, 1, 0.2] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1 h-1 rounded-full bg-zinc-500" />
+              <motion.div
+                animate={{ opacity: [0.2, 1, 0.2] }}
+                transition={{ repeat: Infinity, duration: 1 }}
+                className="w-1 h-1 rounded-full bg-zinc-800"
+              />
+              <motion.div
+                animate={{ opacity: [0.2, 1, 0.2] }}
+                transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
+                className="w-1 h-1 rounded-full bg-zinc-800"
+              />
+              <motion.div
+                animate={{ opacity: [0.2, 1, 0.2] }}
+                transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
+                className="w-1 h-1 rounded-full bg-zinc-800"
+              />
             </div>
-            <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600 italic">
-              {JUDGE_CONFIG[currentTypingJudge]?.label || 'JUDGE'}_Is_Responding...
+            <span className="text-[8px] font-black uppercase tracking-widest text-zinc-900 italic">
+              {JUDGE_CONFIG[currentTypingJudge]?.label || "JUDGE"} is entering
+              the transcript...
             </span>
           </motion.div>
         )}
 
-        {isStreaming && !isJudgeTyping && dialogue.length === visibleDialogue.length && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex items-center justify-center gap-4 text-zinc-700 py-12"
-          >
-            <Loader2 className="animate-spin" size={12} />
-            <span className="text-[9px] font-black uppercase tracking-widest animate-pulse">Waiting_For_Protocol_Uplink...</span>
-          </motion.div>
-        )}
+        {isStreaming &&
+          !isJudgeTyping &&
+          dialogue.length === visibleDialogue.length && (
+            <div className="flex items-center gap-4 text-zinc-900 pl-10 italic">
+              <Loader2 className="animate-spin" size={10} />
+              <span className="text-[8px] font-black uppercase tracking-widest animate-pulse">
+                Awaiting cross-examination...
+              </span>
+            </div>
+          )}
       </div>
 
       {/* Final Consensus */}
       {panelData?.final_consensus && allDialogueRevealed && (
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          className="pt-24 space-y-12"
+          className="pt-24 space-y-16"
         >
-          <div className="h-[1px] w-full bg-zinc-900 relative">
-             <div className="absolute inset-0 bg-white/20 w-1/4 animate-pulse" />
+          <div className="relative flex items-center">
+            <div className="h-[1px] w-full bg-white/10" />
+            <span className="absolute left-0 bg-black pr-6 text-[10px] uppercase tracking-[0.8em] font-black text-zinc-600">
+              The Verdict
+            </span>
           </div>
-          
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-             <div className="space-y-6 text-left">
-                <span className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600">Collective_Verdict</span>
-                <p className="text-2xl md:text-4xl text-white font-black italic uppercase tracking-tighter leading-tight">
-                   "{panelData.final_consensus}"
-                </p>
-             </div>
-             <div className="flex flex-col items-center md:items-end gap-4">
-                <span className="text-[10px] font-black uppercase tracking-[0.5em] text-zinc-600">Overall_Grade</span>
-                <div className="relative">
-                   <h2 className="text-9xl font-black italic text-white drop-shadow-[0_0_40px_rgba(255,255,255,0.1)]">
-                      {panelData.overall_grade}
-                   </h2>
-                </div>
-             </div>
+
+          <div className="space-y-10">
+            <p className="text-2xl md:text-4xl text-white font-black italic uppercase tracking-tighter leading-tight max-w-4xl">
+              "{panelData.final_consensus}"
+            </p>
+            <div className="flex items-baseline gap-4">
+              <span className="text-[9px] font-black uppercase tracking-[0.5em] text-zinc-800">
+                Official Grade
+              </span>
+              <h2 className="text-6xl md:text-9xl font-black italic text-white leading-none">
+                {panelData.overall_grade}
+              </h2>
+            </div>
           </div>
         </motion.div>
       )}

@@ -57,6 +57,40 @@ export class GitHubService {
     }
   }
 
+  static async getFileContent(owner: string, repo: string, path: string): Promise<string | null> {
+    try {
+      const response = await fetch(`${GITHUB_API_URL}/repos/${owner}/${repo}/contents/${path}`, {
+        headers: {
+          Accept: "application/vnd.github.v3.raw",
+          ...this.getAuthHeader(),
+        },
+      });
+
+      if (!response.ok) return null;
+      return response.text();
+    } catch (error) {
+      console.error(`Error fetching file ${path}:`, error);
+      return null;
+    }
+  }
+
+  static async getDirectoryContents(owner: string, repo: string, path: string = ""): Promise<any[] | null> {
+    try {
+      const response = await fetch(`${GITHUB_API_URL}/repos/${owner}/${repo}/contents/${path}`, {
+        headers: {
+          Accept: "application/vnd.github.v3+json",
+          ...this.getAuthHeader(),
+        },
+      });
+
+      if (!response.ok) return null;
+      return response.json();
+    } catch (error) {
+      console.error(`Error fetching directory ${path}:`, error);
+      return null;
+    }
+  }
+
   static async getRecentCommits(username: string): Promise<string[]> {
     try {
       console.log(`[DEBUG] Scraping direct commits for: ${username}`);

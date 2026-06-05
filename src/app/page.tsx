@@ -6,92 +6,74 @@ import { Input } from "@/components/ui/input";
 import { RoastDisplay } from "@/components/roast/roast-display";
 import { BattleDisplay } from "@/components/roast/battle-display";
 import { PanelDisplay } from "@/components/roast/panel-display";
+import { DependencyDisplay } from "@/components/roast/dependency-display";
+import { WrappedDisplay } from "@/components/roast/wrapped-display";
 import { GitHubUser, RoastVibe } from "@/types/github";
-import { Info, X, Zap, Terminal } from "lucide-react";
+import { X, Info } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 
-const VIBE_CONFIG: Record<RoastVibe, { label: string; desc: string }> = {
-  elitist: { label: "Elitist", desc: "Condescending snob." },
-  brogrammer: { label: "Brogrammer", desc: "Obsessed with scale." },
-  chaos: { label: "Chaos", desc: "Spaghetti enthusiast." },
-  recruiter: { label: "Recruiter", desc: "Soul-crushing HR." },
+const JUDGMENT_PERSONAS: Record<RoastVibe, { label: string; desc: string }> = {
+  elitist: { label: "The Gatekeeper", desc: "A senior dev who hates everything you've ever built." },
+  brogrammer: { label: "The Hype Beast", desc: "If it's not the latest framework, it's garbage." },
+  chaos: { label: "The Chaos Gremlin", desc: "Someone who actually enjoys your spaghetti code." },
+  recruiter: { label: "The Soul Crusher", desc: "Your career is over before it even started." },
 };
 
 export default function Home() {
   const [query, setQuery] = useState("");
   const [query2, setQuery2] = useState("");
-  const [mode, setMode] = useState<"solo" | "battle" | "panel">("solo");
+  const [mode, setMode] = useState<"solo" | "battle" | "panel" | "dependency">("solo");
   const [vibe, setVibe] = useState<RoastVibe>("elitist");
   const [user, setUser] = useState<GitHubUser | null>(null);
   const [user2, setUser2] = useState<GitHubUser | null>(null);
   const [roastData, setRoastData] = useState<any>(null);
+  const [showWrapped, setShowWrapped] = useState(false);
   const [loadingLogs, setLoadingLogs] = useState<string[]>([]);
   const [showInfo, setShowInfo] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const loadingPool = [
-    "Reading commit history...",
-    "Judging architectural decisions...",
-    "Finding evidence of chaos...",
-    "Reviewing poorly named variables...",
-    "Questioning life choices...",
-    "Analyzing README-to-code ratio...",
-    "Scanning for 'TODO' comments...",
-    "Checking for hardcoded secrets...",
-    "Evaluating commit frequency...",
-    "Comparing against best practices...",
-    "Calculating technical debt...",
-    "Detecting copy-pasted StackOverflow code...",
+    "Sighing at your commit history...",
+    "Wondering why you chose this career...",
+    "Looking for a single star in this graveyard...",
+    "Asking myself if you even test this stuff...",
+    "Finding evidence of pure desperation...",
+    "Analyzing READMEs that contain more ambition than code...",
+    "Checking if you've ever finished a single project...",
+    "Counting how many frameworks you've abandoned...",
+    "Calculating the carbon footprint of your bad logic...",
+    "Wondering if you ever sleep, or just write bugs...",
   ];
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [loadingLogs]);
-
   const roastMutation = useMutation({
-    mutationFn: async ({ 
-      targetQuery, 
-      targetQuery2, 
-      targetVibe, 
-      type 
-    }: { 
-      targetQuery: string; 
-      targetQuery2?: string; 
-      targetVibe: RoastVibe; 
-      type: "solo" | "battle" | "panel" 
-    }) => {
+    mutationFn: async ({ targetQuery, targetQuery2, targetVibe, type }: any) => {
       setUser(null);
       setUser2(null);
       setRoastData(null);
-      setLoadingLogs(["[SYS] Initializing " + (type === "battle" ? "Combat_Protocol" : type === "panel" ? "Hearing_Protocol" : "Judgment_Protocol") + "..."]);
+      setLoadingLogs(["Preparing to judge your life choices..."]);
 
       const logInterval = setInterval(() => {
         const randomMsg = loadingPool[Math.floor(Math.random() * loadingPool.length)];
-        setLoadingLogs(prev => [...prev.slice(-10), `[LOG] ${randomMsg}`]);
+        setLoadingLogs(prev => [...prev.slice(-10), randomMsg]);
       }, 1500);
 
       try {
         let url = `/api/roast?username=${targetQuery}&vibe=${targetVibe}`;
-        
-        if (type === "battle") {
-          url = `/api/battle?u1=${targetQuery}&u2=${targetQuery2}&vibe=${targetVibe}`;
-        } else if (type === "panel") {
-          url = `/api/roast?username=${targetQuery}&type=panel`;
+        if (type === "battle") url = `/api/battle?u1=${targetQuery}&u2=${targetQuery2}&vibe=${targetVibe}`;
+        else if (type === "panel") url = `/api/roast?username=${targetQuery}&type=panel`;
+        else if (type === "dependency") {
+          const [u, r] = targetQuery.split("/");
+          url = `/api/roast?username=${u}&repo=${r}&type=dependency`;
         } else if (type === "solo" && targetQuery.includes("/")) {
-          const [username, repo] = targetQuery.split("/");
-          url = `/api/roast?username=${username}&repo=${repo}&vibe=${targetVibe}`;
+          const [u, r] = targetQuery.split("/");
+          url = `/api/roast?username=${u}&repo=${r}&vibe=${targetVibe}`;
         }
 
         const response = await fetch(url);
-        if (!response.ok) {
-          const result = await response.json();
-          throw new Error(result.error || "Failed to fetch roast");
-        }
+        if (!response.ok) throw new Error("Something went wrong. Probably your code.");
 
         const reader = response.body?.getReader();
-        if (!reader) throw new Error("ReadableStream not supported");
+        if (!reader) throw new Error("Stream failure.");
 
         const decoder = new TextDecoder();
         let accumulatedRaw = "";
@@ -99,57 +81,47 @@ export default function Home() {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-
           const chunk = decoder.decode(value, { stream: true });
 
           if (chunk.startsWith("USER_DATA:")) {
             const lines = chunk.split("\n");
-            const userDataStr = lines[0].replace("USER_DATA:", "");
-            try { setUser(JSON.parse(userDataStr)); } catch (e) { }
+            try { setUser(JSON.parse(lines[0].replace("USER_DATA:", ""))); } catch (e) {}
             accumulatedRaw += lines.slice(1).join("\n");
           } else if (chunk.startsWith("USERS_DATA:")) {
             const lines = chunk.split("\n");
-            const userDataStr = lines[0].replace("USERS_DATA:", "");
             try { 
-              const { user1, user2 } = JSON.parse(userDataStr);
+              const { user1, user2 } = JSON.parse(lines[0].replace("USERS_DATA:", ""));
               setUser(user1);
               setUser2(user2);
-            } catch (e) { }
+            } catch (e) {}
             accumulatedRaw += lines.slice(1).join("\n");
-          } else {
-            accumulatedRaw += chunk;
-          }
+          } else accumulatedRaw += chunk;
 
           try {
             if (accumulatedRaw.trim().endsWith("}")) {
-              const data = JSON.parse(accumulatedRaw);
-              setRoastData(data);
+              setRoastData(JSON.parse(accumulatedRaw));
             } else {
-              // Partial parsing for better UX
               const introMatch = accumulatedRaw.match(/"introduction":\s*"([^"]*)"?/);
               const titleMatch = accumulatedRaw.match(/"hearing_title":\s*"([^"]*)"?/);
+              const bloatMatch = accumulatedRaw.match(/"bloat_score":\s*("([^"]*)"|(\d+))/);
               
-              if (introMatch || titleMatch) {
+              if (introMatch || titleMatch || bloatMatch) {
                 setRoastData((prev: any) => {
                   const newData = { ...prev };
                   if (introMatch) newData.introduction = introMatch[1];
+                  if (bloatMatch) {
+                    newData.bloat_score = bloatMatch[2] || bloatMatch[3];
+                  }
                   if (titleMatch) {
                     newData.hearing_title = titleMatch[1];
-                    // Ensure we have a dialogue array to trigger PanelDisplay
                     if (!newData.dialogue) newData.dialogue = [];
                   }
-                  
-                  // Try to extract dialogue items partially
                   if (titleMatch) {
                     const dialogueSection = accumulatedRaw.split('"dialogue":')[1];
                     if (dialogueSection) {
-                      const items = [];
-                      const itemMatches = dialogueSection.matchAll(/\{\s*"judge":\s*"([^"]*)",\s*"text":\s*"([^"]*)"/g);
-                      for (const match of itemMatches) {
-                        items.push({ judge: match[1], text: match[2] });
-                      }
-                      if (items.length > (prev?.dialogue?.length || 0)) {
-                        newData.dialogue = items;
+                      const itemMatches = Array.from(dialogueSection.matchAll(/\{\s*"judge":\s*"([^"]*)",\s*"text":\s*"([^"]*)"/g));
+                      if (itemMatches.length > (prev?.dialogue?.length || 0)) {
+                        newData.dialogue = itemMatches.map(m => ({ judge: m[1], text: m[2] }));
                       }
                     }
                   }
@@ -157,8 +129,11 @@ export default function Home() {
                 });
               }
             }
-          } catch (e) { }
+          } catch (e) {}
         }
+      } catch (err: any) {
+        setLoadingLogs(prev => [...prev, `[ERR] ${err.message}`]);
+        throw err;
       } finally {
         clearInterval(logInterval);
       }
@@ -168,246 +143,229 @@ export default function Home() {
   const handleRoast = (e: React.FormEvent) => {
     e.preventDefault();
     if (!query || roastMutation.isPending) return;
-    if (mode === "battle" && !query2) return;
-    roastMutation.mutate({ 
-      targetQuery: query, 
-      targetQuery2: query2, 
-      targetVibe: vibe,
-      type: mode 
-    });
+
+    if (mode === "dependency" && !query.includes("/")) {
+      setLoadingLogs(["[ERR] Format must be owner/repo"]);
+      return;
+    }
+
+    roastMutation.mutate({ targetQuery: query, targetQuery2: query2, targetVibe: vibe, type: mode });
   };
 
   return (
-    <div className="min-h-screen selection:bg-white selection:text-black overflow-hidden bg-black text-white font-sans">
+    <div className="min-h-screen selection:bg-white selection:text-black bg-black text-white font-sans relative">
+      {/* Sidebar Navigation - Only show when roast is active */}
+      <AnimatePresence>
+        {roastData && (
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="fixed right-10 top-1/2 -translate-y-1/2 z-[60] hidden md:flex flex-col gap-6"
+          >
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="group relative flex items-center justify-end gap-4">
+                <div className={`w-1.5 h-1.5 rounded-full transition-all duration-500 border border-white/20`} />
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {showInfo && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6"
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              className="max-w-2xl w-full bg-zinc-950 border border-zinc-900 p-12 space-y-12 relative overflow-hidden"
-            >
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 blur-[80px] rounded-full -mr-32 -mt-32" />
-              
-              <div className="flex justify-between items-start relative z-10">
-                <div className="space-y-6">
-                  <div className="flex items-center gap-4 text-white">
-                    <Zap size={24} className="fill-white" />
-                    <h2 className="text-3xl font-black tracking-tighter uppercase italic">System_Manifesto</h2>
-                  </div>
-                  <div className="space-y-6 text-zinc-400 text-lg leading-relaxed font-medium">
-                    <p>
-                      RoastMyGitHub is a high-fidelity experiment in <span className="text-white font-bold italic">Cinematic Technical Auditing</span>.
-                    </p>
-                    <p>
-                      Built using 100% Vibe Coding, this platform bypasses traditional logic in favor of pure intent and AI-driven narrative. Every roast is a unique, data-backed teardown of your technical existence.
-                    </p>
-                    <div className="pt-6 border-t border-zinc-900 grid grid-cols-2 gap-8">
-                       <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Core_Engine</p>
-                          <p className="text-sm text-zinc-300 font-bold uppercase tracking-tighter italic">GPT-4o_Optimized</p>
-                       </div>
-                       <div className="space-y-1">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">UI_Framework</p>
-                          <p className="text-sm text-zinc-300 font-bold uppercase tracking-tighter italic">Framer_Motion_v11</p>
-                       </div>
-                    </div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-6 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-xl w-full p-12 space-y-10 border border-white/10 bg-black">
+              <div className="flex justify-between items-start">
+                <div className="space-y-8">
+                  <h2 className="text-3xl font-bold tracking-tight italic">What is this?</h2>
+                  <div className="space-y-6 text-zinc-400 text-lg leading-relaxed">
+                    <p>Most GitHub profiles are forgettable. Some are abandoned graveyards of unfinished ideas. Some contain twelve frameworks and a dream.</p>
+                    <p>Yours is probably one of them. We're just here to tell you the truth.</p>
                   </div>
                 </div>
-                <button onClick={() => setShowInfo(false)} className="p-2 hover:bg-white/10 rounded-full transition-all group">
-                  <X size={24} className="text-zinc-500 group-hover:text-white group-hover:rotate-90 transition-all" />
-                </button>
+                <button onClick={() => setShowInfo(false)} className="p-2 text-zinc-600 hover:text-white transition-colors"><X size={24} /></button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <main className={`${roastData ? 'narrative-container' : 'max-w-4xl mx-auto px-6 h-screen flex flex-col justify-center overflow-hidden'}`}>
+      <main className={`${!roastMutation.isPending && roastData ? 'narrative-container' : 'max-w-6xl mx-auto px-10 h-[100dvh] flex flex-col justify-center overflow-hidden'}`}>
         {!roastMutation.isPending && !roastData && (
-          <div className="space-y-12">
-            <div className="flex justify-between items-start">
-              <div className="space-y-2">
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[10px] uppercase tracking-[0.6em] text-muted font-black">Project_Core_V2.5</motion.p>
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-zinc-600 text-sm italic leading-relaxed font-medium">Every repository tells a story. Most are tragedies.</motion.p>
-              </div>
-              <motion.button initial={{ opacity: 0 }} animate={{ opacity: 0.3 }} whileHover={{ opacity: 1 }} onClick={() => setShowInfo(true)} className="p-2 border border-zinc-900 rounded-full hover:border-white transition-all"><Info size={14} /></motion.button>
-            </div>
+          <div className="space-y-[4vh] max-w-5xl">
+            <header className="flex justify-between items-center">
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 0.4 }} className="text-[10px] uppercase tracking-[0.6em] font-black italic">Performance Review v2.5</motion.p>
+              <button onClick={() => setShowInfo(true)} className="text-[10px] uppercase tracking-[0.4em] text-zinc-600 hover:text-white transition-colors font-bold">The Reality</button>
+            </header>
 
-            <div className="space-y-8">
+            <div className="space-y-[6vh]">
               <motion.div 
-                initial={{ opacity: 0, y: 20 }} 
+                initial={{ opacity: 0, y: 30 }} 
                 animate={{ opacity: 1, y: 0 }} 
-                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                className="h-[14rem] md:h-[16rem] flex flex-col justify-end" // Fixed height for header area
+                transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                className="space-y-6"
               >
-                <h1 className="text-7xl md:text-[8.5rem] font-black tracking-tighter text-white leading-[0.85] uppercase italic">
-                  {mode === "battle" ? "Dual" : mode === "panel" ? "Panel" : "Roast"} <br /> {mode === "battle" ? "Combat" : mode === "panel" ? "Hearing" : "GitHub"}<span className="text-zinc-900 not-italic">.</span>
-                </h1>
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="flex gap-8 border-b border-zinc-900 pb-2 max-w-fit">
-                <button 
-                  onClick={() => setMode("solo")}
-                  className={`text-[10px] font-black uppercase tracking-[0.4em] transition-all relative ${mode === "solo" ? 'text-white' : 'text-zinc-700 hover:text-zinc-500'}`}
-                >
-                  Solo_Judgment
-                  {mode === "solo" && <motion.div layoutId="mode-underline" className="absolute -bottom-[11px] left-0 right-0 h-[2px] bg-white" />}
-                </button>
-                <button 
-                  onClick={() => setMode("battle")}
-                  className={`text-[10px] font-black uppercase tracking-[0.4em] transition-all relative ${mode === "battle" ? 'text-white' : 'text-zinc-700 hover:text-zinc-500'}`}
-                >
-                  Dual_Combat
-                  {mode === "battle" && <motion.div layoutId="mode-underline" className="absolute -bottom-[11px] left-0 right-0 h-[2px] bg-white" />}
-                </button>
-                <button 
-                  onClick={() => setMode("panel")}
-                  className={`text-[10px] font-black uppercase tracking-[0.4em] transition-all relative ${mode === "panel" ? 'text-white' : 'text-zinc-700 hover:text-zinc-500'}`}
-                >
-                  Panel_Hearing
-                  {mode === "panel" && <motion.div layoutId="mode-underline" className="absolute -bottom-[11px] left-0 right-0 h-[2px] bg-white" />}
-                </button>
-              </motion.div>
-            </div>
-
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="grid md:grid-cols-2 gap-16 items-start text-white min-h-[320px]">
-              <form onSubmit={handleRoast} className="space-y-8">
-                <div className="space-y-6 min-h-[160px] flex flex-col justify-start"> {/* Min-height for inputs */}
-                  <div className="group space-y-3">
-                    <p className="text-zinc-700 text-[10px] font-black uppercase tracking-[0.3em]">{mode === "battle" ? "Subject_01:" : "Identify_Subject:"}</p>
-                    <Input
-                      type="text"
-                      placeholder="username or owner/repo"
-                      className="bg-transparent border-0 border-b border-zinc-900 rounded-none h-12 text-2xl font-bold focus-visible:ring-0 focus-visible:border-white transition-all p-0 placeholder:text-zinc-900 text-white"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      autoFocus
-                    />
+                <div className="space-y-4 text-left">
+                  <div className="h-[12rem] md:h-[10rem] flex flex-col justify-end"> {/* Fixed height for headline */}
+                    <h1 className="text-4xl md:text-[4.5rem] font-bold tracking-tighter leading-[1] italic">
+                      {mode === "battle" ? "Two developers." : mode === "panel" ? "One profile." : mode === "dependency" ? "One repo." : "Most GitHub profiles"} <br />
+                      <span className="text-zinc-800 not-italic">
+                        {mode === "battle" ? "One winner." : mode === "panel" ? "Four judges." : mode === "dependency" ? "Zero hope." : "Are forgettable."}
+                      </span>
+                    </h1>
                   </div>
-
-                  {mode === "battle" && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="group space-y-3 pt-4">
-                      <p className="text-zinc-700 text-[10px] font-black uppercase tracking-[0.3em]">Subject_02:</p>
-                      <Input
-                        type="text"
-                        placeholder="username"
-                        className="bg-transparent border-0 border-b border-zinc-900 rounded-none h-12 text-2xl font-bold focus-visible:ring-0 focus-visible:border-white transition-all p-0 placeholder:text-zinc-900 text-white"
-                        value={query2}
-                        onChange={(e) => setQuery2(e.target.value)}
-                      />
-                    </motion.div>
-                  )}
+                  <p className="text-base md:text-lg text-zinc-500 leading-relaxed max-w-2xl font-medium">
+                    Abandoned graveyards of unfinished ideas and a dozen frameworks. <br/> We're just here to tell you which one you are.
+                  </p>
                 </div>
 
-                <button type="submit" className="text-[10px] uppercase tracking-[0.6em] font-black text-zinc-500 hover:text-white transition-all flex items-center gap-4 group pt-2">
-                  <span>{mode === "battle" ? "Start_Battle" : mode === "panel" ? "Summon_Panel" : "Initiate_Judgment"}</span>
-                  <div className="w-12 h-[1px] bg-zinc-900 group-hover:w-20 group-hover:bg-white transition-all duration-700" />
-                </button>
-              </form>
-
-              <div className="space-y-6">
-                <p className="text-zinc-700 text-[10px] font-black uppercase tracking-[0.3em]">Persona_Protocol:</p>
-                <div className="grid grid-cols-2 gap-2 min-h-[160px]"> {/* Min-height for persona area */}
-                  {(Object.keys(VIBE_CONFIG) as RoastVibe[]).map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      disabled={mode === "panel"}
-                      onClick={() => setVibe(v)}
-                      className={`text-left p-4 border transition-all duration-500 group relative overflow-hidden ${
-                        vibe === v && mode !== "panel"
-                          ? "border-white/20 bg-white/5" 
-                          : "border-zinc-900 text-zinc-600 hover:border-zinc-800 disabled:opacity-30 disabled:hover:border-zinc-900"
-                      }`}
+                <div className="flex flex-wrap gap-x-8 gap-y-4 text-[10px] uppercase tracking-[0.4em] font-bold text-zinc-600">
+                  {[
+                    { id: "solo", label: "Single Roast" },
+                    { id: "battle", label: "Dual Battle" },
+                    { id: "panel", label: "The Hearing" },
+                    { id: "dependency", label: "Bloat Audit" }
+                  ].map((m) => (
+                    <button 
+                      key={m.id}
+                      onClick={() => setMode(m.id as any)}
+                      className={`transition-all relative py-2 ${mode === m.id ? 'text-white' : 'hover:text-zinc-400'}`}
                     >
-                      {vibe === v && mode !== "panel" && <motion.div layoutId="vibe-bg" className="absolute inset-0 bg-white/5 -z-10" />}
-                      <div className="flex justify-between items-center text-white">
-                        <p className={`text-[10px] font-black uppercase tracking-widest transition-colors ${vibe === v && mode !== "panel" ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400'}`}>
-                          {VIBE_CONFIG[v].label}
-                        </p>
-                      </div>
-                      <p className={`text-[9px] mt-1 leading-relaxed font-medium transition-colors ${vibe === v && mode !== "panel" ? 'text-zinc-500' : 'text-zinc-800'}`}>
-                        {VIBE_CONFIG[v].desc}
-                      </p>
+                      {m.label}
+                      {mode === m.id && <motion.div layoutId="mode-dot" className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full" />}
                     </button>
                   ))}
-                  {mode === "panel" && (
-                     <div className="col-span-2 p-4 border border-white/10 bg-white/5 rounded-sm h-fit">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white mb-2">Panel_Mode_Active</p>
-                        <p className="text-[9px] text-zinc-500 leading-relaxed">All judges will be present. Selection protocol bypassed.</p>
-                     </div>
-                  )}
                 </div>
-              </div>
-            </motion.div>
-
-            {roastMutation.isError && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 border border-red-950 bg-red-500/5 max-w-fit">
-                <p className="text-red-500 text-[9px] font-mono uppercase tracking-[0.3em] font-black">Error_Signal: {(roastMutation.error as Error).message}</p>
               </motion.div>
-            )}
-          </div>
-        )}
 
-        {roastMutation.isPending && !roastData?.introduction && (
-          <div className="h-screen flex flex-col items-center justify-center p-6">
-            <div className="w-full max-w-lg space-y-6">
-              <div className="flex items-center gap-3 text-white">
-                <Terminal size={18} />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em]">Processing_Data_Stream</span>
-              </div>
-              <div 
-                ref={scrollRef}
-                className="bg-zinc-950 border border-zinc-900 p-6 rounded-sm h-64 overflow-y-auto font-mono text-[11px] space-y-2 scrollbar-none"
-              >
-                {loadingLogs.map((log, i) => (
-                  <motion.p 
-                    initial={{ opacity: 0, x: -10 }} 
-                    animate={{ opacity: 1, x: 0 }} 
-                    key={i} 
-                    className={log.startsWith("[SYS]") ? "text-white" : "text-zinc-600"}
-                  >
-                    <span className="opacity-30 mr-2">{new Date().toLocaleTimeString()}</span>
-                    {log}
-                  </motion.p>
-                ))}
-                <div className="w-1.5 h-4 bg-white animate-pulse inline-block align-middle ml-1" />
+              <div className="grid md:grid-cols-[1fr_300px] gap-16 items-end">
+                <form onSubmit={handleRoast} className="space-y-8">
+                   <div className="space-y-3 h-[180px] flex flex-col justify-start"> {/* Fixed height for inputs */}
+                      <div className="space-y-3">
+                        <label className="text-[9px] uppercase tracking-[0.4em] text-zinc-700 font-black">
+                          {mode === "battle" ? "First Victim" : mode === "dependency" ? "Target Repository" : "GitHub Username"}
+                        </label>
+                        <Input
+                          type="text"
+                          placeholder={mode === "dependency" ? "owner/repo" : "your-username"}
+                          className="bg-transparent border-0 border-b border-zinc-900 rounded-none h-12 text-2xl md:text-3xl font-bold focus-visible:ring-0 focus-visible:border-white transition-all p-0 placeholder:text-zinc-900 text-white"
+                          value={query}
+                          onChange={(e) => setQuery(e.target.value)}
+                          autoFocus
+                        />
+                      </div>
+
+                      <AnimatePresence>
+                        {mode === "battle" && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: 10 }} 
+                            animate={{ opacity: 1, y: 0 }} 
+                            exit={{ opacity: 0, y: 10 }}
+                            className="space-y-3 pt-6"
+                          >
+                             <label className="text-[9px] uppercase tracking-[0.4em] text-zinc-700 font-black">Second Victim</label>
+                             <Input
+                               type="text"
+                               placeholder="their-username"
+                               className="bg-transparent border-0 border-b border-zinc-900 rounded-none h-12 text-2xl md:text-3xl font-bold focus-visible:ring-0 focus-visible:border-white transition-all p-0 placeholder:text-zinc-900 text-white"
+                               value={query2}
+                               onChange={(e) => setQuery2(e.target.value)}
+                             />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                   </div>
+
+                   <div className="pt-2">
+                      <button type="submit" className="group flex items-center gap-6 text-[10px] uppercase tracking-[0.6em] font-black text-white w-fit">
+                        <span>{mode === "battle" ? "Start the Fight" : mode === "panel" ? "Hear Judgment" : "Judge My GitHub"}</span>
+                        <div className="w-12 h-[1px] bg-zinc-800 group-hover:w-16 group-hover:bg-white transition-all duration-700" />
+                      </button>
+                   </div>
+                </form>
+
+                <div className="space-y-6 hidden md:block text-left pb-1">
+                   <p className="text-[9px] uppercase tracking-[0.4em] text-zinc-700 font-black italic">Choose your Judge</p>
+                   <div className="flex flex-col gap-3">
+                     {(Object.keys(JUDGMENT_PERSONAS) as RoastVibe[]).map((v) => (
+                       <button
+                         key={v}
+                         type="button"
+                         disabled={mode === "panel" || mode === "dependency"}
+                         onClick={() => setVibe(v)}
+                         className={`text-left group transition-all ${
+                           vibe === v && mode !== "panel" && mode !== "dependency"
+                             ? "text-white" 
+                             : "text-zinc-700 hover:text-zinc-500 disabled:opacity-20"
+                         }`}
+                       >
+                         <p className="text-[10px] font-bold uppercase tracking-[0.2em]">{JUDGMENT_PERSONAS[v].label}</p>
+                         <p className="text-[9px] mt-1 italic leading-snug text-zinc-600 group-hover:text-zinc-400 transition-colors">
+                           {JUDGMENT_PERSONAS[v].desc}
+                         </p>
+                       </button>
+                     ))}
+                   </div>
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {roastData && (
+        {roastMutation.isPending && (
+          <div className="h-screen flex flex-col items-center justify-center p-6 text-center space-y-12">
+            <div className="space-y-4">
+               <div className="flex justify-center mb-12"><div className="w-8 h-[1px] bg-white animate-pulse" /></div>
+               <div className="h-20 flex flex-col justify-center">
+                <AnimatePresence mode="wait">
+                  <motion.p key={loadingLogs[loadingLogs.length - 1]} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="text-2xl md:text-3xl font-medium italic text-zinc-400">{loadingLogs[loadingLogs.length - 1]}</motion.p>
+                </AnimatePresence>
+               </div>
+            </div>
+          </div>
+        )}
+
+        {!roastMutation.isPending && roastData && (
           <div className="space-y-32">
             {!user2 && user && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-4 opacity-20 hover:opacity-100 transition-opacity">
-                <img src={user.avatar_url} alt={user.login} className="w-10 h-10 rounded-full grayscale" />
-                <div className="flex flex-col"><span className="text-[10px] font-black uppercase text-white">@{user.login}</span></div>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.2 }} whileHover={{ opacity: 1 }} className="flex items-center gap-4 transition-all">
+                <img src={user.avatar_url} alt={user.login} className="w-8 h-8 rounded-full grayscale" />
+                <span className="text-[10px] font-black uppercase text-white">@{user.login}</span>
               </motion.div>
             )}
             
-            {user2 ? (
-              <BattleDisplay battle={roastData} user1={user || undefined} user2={user2} isStreaming={roastMutation.isPending} />
-            ) : roastData.dialogue ? (
-              <PanelDisplay panelData={roastData} user={user || undefined} isStreaming={roastMutation.isPending} />
-            ) : (
-              <RoastDisplay roast={roastData} user={user || undefined} isStreaming={roastMutation.isPending} vibe={vibe} />
-            )}
+            <div className="relative">
+              {user2 ? (
+                <BattleDisplay battle={roastData} user1={user || undefined} user2={user2} isStreaming={roastMutation.isPending} />
+              ) : mode === "dependency" ? (
+                <DependencyDisplay data={roastData} isStreaming={roastMutation.isPending} />
+              ) : roastData.dialogue ? (
+                <PanelDisplay panelData={roastData} user={user || undefined} isStreaming={roastMutation.isPending} />
+              ) : (
+                <RoastDisplay roast={roastData} user={user || undefined} isStreaming={roastMutation.isPending} vibe={vibe} onShowWrapped={() => setShowWrapped(true)} />
+              )}
+            </div>
 
             {!roastMutation.isPending && (
               <div className="pt-32 pb-24 text-center">
-                <button onClick={() => { setRoastData(null); setUser(null); setUser2(null); setQuery(""); setQuery2(""); roastMutation.reset(); }} className="text-[10px] uppercase tracking-[0.4em] font-black text-muted hover:text-white transition-colors">Reset_Narrative</button>
+                <button onClick={() => { setRoastData(null); setUser(null); setUser2(null); setQuery(""); setQuery2(""); roastMutation.reset(); }} className="text-[10px] uppercase tracking-[0.4em] font-black text-zinc-700 hover:text-white transition-colors">Start Again</button>
               </div>
             )}
           </div>
         )}
       </main>
+
+      <AnimatePresence>
+        {showWrapped && (
+          <WrappedDisplay 
+            user={user || undefined} 
+            roast={roastData} 
+            vibe={vibe} 
+            onClose={() => setShowWrapped(false)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

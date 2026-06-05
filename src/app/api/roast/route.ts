@@ -25,6 +25,44 @@ export async function GET(request: NextRequest) {
         GitHubService.getRecentCommits(username)
       ]);
       stream = await AIService.streamPanelRoast(userData, repos, commits);
+    } else if (type === "dependency" && repo) {
+      // Deep dive dependency roast
+      userData = await GitHubService.getUserProfile(username);
+      const manifests = [
+        "package.json", 
+        "requirements.txt", 
+        "Cargo.toml", 
+        "go.mod", 
+        "composer.json", 
+        "Gemfile", 
+        "mix.exs", 
+        "pom.xml", 
+        "build.gradle"
+      ];
+      let manifestContent = null;
+      let foundManifest = "";
+
+      for (const m of manifests) {
+        const content = await GitHubService.getFileContent(username, repo, m);
+        if (content) {
+          manifestContent = content;
+          foundManifest = m;
+          break;
+        }
+      }
+
+      if (!manifestContent) {
+        // Fallback: Get directory contents and roast the structure
+        const contents = await GitHubService.getDirectoryContents(username, repo);
+        if (contents) {
+          manifestContent = contents.map(f => `${f.type === 'dir' ? '[DIR]' : '[FILE]'} ${f.path}`).join("\n");
+          foundManifest = "Project Structure (File List)";
+        } else {
+          throw new Error(`No supported manifest file or project structure found in ${username}/${repo}. We searched for: ${manifests.join(", ")}`);
+        }
+      }
+
+      stream = await AIService.streamDependencyRoast(manifestContent, repo, foundManifest);
     } else if (repo) {
       const [repoData, readme, commits] = await Promise.all([
         GitHubService.getRepository(username, repo),
