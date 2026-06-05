@@ -1,30 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GitHubUser } from "@/types/github";
-import { Share2, Loader2, Sparkles, ChevronDown } from "lucide-react";
+import { Share2, Loader2, Sparkles, ChevronDown, Download } from "lucide-react";
+import { toPng } from "html-to-image";
+import { ReportCard } from "./report-card";
 
 interface RoastDisplayProps {
   roast: any;
   user?: GitHubUser;
   isStreaming?: boolean;
+  vibe?: string;
 }
 
-export function RoastDisplay({ roast, user, isStreaming }: RoastDisplayProps) {
+export function RoastDisplay({ roast, user, isStreaming, vibe = "elitist" }: RoastDisplayProps) {
   const introduction = roast?.introduction || "";
   const steps = roast?.steps || [];
   const verdict = roast?.verdict || "";
   const hireabilityScore = roast?.hireability_score;
   const portfolioAudit = roast?.portfolio_audit;
   const [expandedReceipt, setExpandedReceipt] = useState<number | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const reportCardRef = useRef<HTMLDivElement>(null);
 
-  const handleShare = () => {
-    const text = `My GitHub profile was just judged: "${verdict || introduction}". Get roasted at RoastMyGitHub.`;
-    window.open(
-      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
-      "_blank",
-    );
+  const handleDownload = async () => {
+    if (!reportCardRef.current || isDownloading) return;
+    setIsDownloading(true);
+    
+    // Give the DOM a moment to ensure the off-screen element is ready
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    try {
+      const options = {
+        cacheBust: true,
+        pixelRatio: 2,
+        backgroundColor: "#000",
+        style: {
+          opacity: "1",
+          visibility: "visible",
+        }
+      };
+
+      // Call once to "warm up" and ensure images/fonts are cached
+      await toPng(reportCardRef.current, options);
+      
+      // Call again to get the final high-quality result
+      const dataUrl = await toPng(reportCardRef.current, options);
+      
+      const link = document.createElement("a");
+      link.download = `roast-${user?.login || "github"}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error("Failed to generate report card:", err);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -207,19 +239,23 @@ export function RoastDisplay({ roast, user, isStreaming }: RoastDisplayProps) {
             className="mt-24"
           >
             <button
-              onClick={handleShare}
-              className="group flex flex-col items-center gap-4 text-muted hover:text-white transition-all duration-500"
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className="group flex flex-col items-center gap-4 text-muted hover:text-white transition-all duration-500 disabled:opacity-50"
             >
               <div className="p-4 rounded-full border border-zinc-800 group-hover:border-white transition-colors">
-                <Share2 size={24} />
+                {isDownloading ? <Loader2 className="animate-spin" size={24} /> : <Download size={24} />}
               </div>
               <span className="text-[10px] uppercase tracking-[0.4em] font-black">
-                Publish Judgment
+                {isDownloading ? "Generating_Asset..." : "Download_Report_Card"}
               </span>
             </button>
           </motion.div>
         </motion.div>
       )}
+
+      {/* Off-screen Report Card for Image Generation */}
+      <ReportCard ref={reportCardRef} user={user} roast={roast} vibe={vibe} />
     </div>
   );
 }

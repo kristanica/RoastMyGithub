@@ -42,6 +42,7 @@ export class AIService {
           }
         ],
         "summary_remedy": "A concise 2-3 sentence technical summary on how the developer can redeem their entire profile.",
+        "grade": "S, A, B, C, D, or F based on technical quality",
         "verdict": "A short, memorable final judgment."
         ${extraMetrics}
       }
@@ -86,6 +87,7 @@ export class AIService {
           }
         ],
         "summary_remedy": "A 2-sentence summary on how to fix this specific repository.",
+        "grade": "S, A, B, C, D, or F based on technical quality",
         "verdict": "Final short judgment"
       }
       Data: ${repo.language}, ${repo.stargazers_count} stars. README: ${readme ? readme.substring(0, 500) : "None"}
