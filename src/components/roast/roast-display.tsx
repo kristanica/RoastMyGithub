@@ -282,38 +282,56 @@ export function RoastDisplay({
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 2 }}
-          className="min-h-screen flex flex-col items-center justify-center relative"
+          className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-red-500/5 to-transparent pointer-events-none" />
+          {/* Enhanced Heat Gradient */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,0,0,0.08),transparent_70%)] pointer-events-none animate-pulse" />
+          
+          {/* Scanning Line Effect */}
+          <motion.div 
+            initial={{ top: "-10%" }}
+            whileInView={{ top: "110%" }}
+            viewport={{ once: true }}
+            transition={{ duration: 3, ease: "easeInOut", repeat: Infinity, repeatDelay: 2 }}
+            className="absolute left-0 right-0 h-[1px] bg-red-500/20 shadow-[0_0_20px_rgba(255,0,0,0.5)] z-10 pointer-events-none"
+          />
 
           <motion.span
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, letterSpacing: "1.5em" }}
+            whileInView={{ opacity: 1, letterSpacing: "1em" }}
             viewport={{ once: true }}
-            transition={{ delay: 0.5, duration: 1 }}
-            className="text-[10px] uppercase tracking-[1em] text-zinc-600 mb-16 block font-black"
+            transition={{ delay: 0.5, duration: 1.5, ease: "easeOut" }}
+            className="text-[10px] uppercase text-zinc-600 mb-12 block font-black text-center"
           >
             The Final Verdict
           </motion.span>
 
           <motion.div
-            initial={{ scale: 0.95, filter: "blur(10px)" }}
-            whileInView={{ scale: 1, filter: "blur(0px)" }}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.8, duration: 1.5, ease: "easeOut" }}
-            className="text-center px-4"
+            transition={{ 
+              delay: 0.8, 
+              duration: 1.2, 
+              ease: [0.16, 1, 0.3, 1] // Custom cubic-bezier for a "sharp" feel
+            }}
+            className="text-center px-4 relative z-20"
           >
-            <p className="text-2xl md:text-5xl lg:text-[3.5rem] font-black tracking-tighter leading-[1.1] text-white italic uppercase break-words max-w-4xl mx-auto">
+            <h2 className="text-3xl md:text-6xl lg:text-7xl font-black tracking-tighter leading-[0.95] text-white italic uppercase break-words max-w-5xl mx-auto selection:bg-red-500 selection:text-white">
               {verdict}
-              <span className="text-red-600 not-italic">.</span>
-            </p>
+              <motion.span 
+                animate={{ opacity: [1, 0, 1] }} 
+                transition={{ duration: 0.2, repeat: Infinity, repeatDelay: 3 }}
+                className="text-red-600 not-italic"
+              >.</motion.span>
+            </h2>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ delay: 2, duration: 1 }}
+            transition={{ delay: 2.5, duration: 1 }}
             className="mt-24 flex flex-col items-center gap-12"
           >
             <button

@@ -15,41 +15,53 @@ interface WrappedDisplayProps {
 export function WrappedDisplay({ user, roast, vibe, onClose }: WrappedDisplayProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const wrapped = roast?.wrapped || {};
+
+  const themeGradients: Record<string, string> = {
+    elitist: "from-zinc-900 via-black to-zinc-900",
+    brogrammer: "from-blue-950 via-black to-zinc-900",
+    chaos: "from-red-950 via-black to-zinc-900",
+    recruiter: "from-slate-900 via-black to-zinc-900",
+  };
+
+  const accentColors: Record<string, string> = {
+    elitist: "white",
+    brogrammer: "#00f2ff",
+    chaos: "#ff003c",
+    recruiter: "#3b82f6",
+  };
+
+  const currentTheme = themeGradients[vibe] || themeGradients.elitist;
+  const accent = accentColors[vibe] || accentColors.elitist;
   
   const slides = [
     {
-      title: "The Beginning",
+      title: "The Narrative Begins",
       content: roast?.introduction,
-      icon: <Zap className="text-white" size={48} />,
-      bg: "bg-black"
+      icon: <Zap size={32} />,
     },
     {
       title: "Your Spirit Language",
       main: wrapped.spirit_language?.name,
       sub: wrapped.spirit_language?.reason,
-      icon: <Award className="text-white" size={48} />,
-      bg: "bg-zinc-950"
+      icon: <Award size={32} />,
     },
     {
-      title: "The Worst Habit",
+      title: "The Fatal Flaw",
       main: wrapped.worst_habit?.name,
       sub: wrapped.worst_habit?.description,
-      icon: <Ghost className="text-white" size={48} />,
-      bg: "bg-black"
+      icon: <Ghost size={32} />,
     },
     {
-      title: "The Best Moment",
+      title: "Peak Performance",
       main: wrapped.best_moment?.name,
       sub: wrapped.best_moment?.description,
-      icon: <Flame className="text-white" size={48} />,
-      bg: "bg-zinc-950"
+      icon: <Flame size={32} />,
     },
     {
-      title: "The Persona",
+      title: "Final Identification",
       main: wrapped.coding_persona?.title,
       sub: wrapped.coding_persona?.description,
-      icon: <Target className="text-white" size={48} />,
-      bg: "bg-black"
+      icon: <Target size={32} />,
     }
   ];
 
@@ -74,77 +86,108 @@ export function WrappedDisplay({ user, roast, vibe, onClose }: WrappedDisplayPro
 
   return (
     <motion.div 
-      initial={{ opacity: 0, scale: 1.1 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-6 md:p-12 overflow-hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className={`fixed inset-0 z-[100] bg-black bg-gradient-to-br ${currentTheme} flex flex-col items-center justify-between p-8 md:p-16 overflow-hidden`}
     >
+      {/* Background Decorative Elements */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 blur-[120px] rounded-full" style={{ backgroundColor: accent }} />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 blur-[120px] rounded-full opacity-20" style={{ backgroundColor: accent }} />
+      </div>
+
       {/* Progress Bars */}
-      <div className="absolute top-8 left-6 right-6 flex gap-2 z-20">
+      <div className="absolute top-10 left-8 right-8 flex gap-2 z-50">
         {slides.map((_, i) => (
-          <div key={i} className="h-1 flex-1 bg-zinc-900 rounded-full overflow-hidden">
+          <div key={i} className="h-[2px] flex-1 bg-white/10 rounded-full overflow-hidden">
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: i === currentSlide ? "100%" : i < currentSlide ? "100%" : "0%" }}
               transition={{ duration: i === currentSlide ? 6 : 0, ease: "linear" }}
-              className="h-full bg-white"
+              className="h-full"
+              style={{ backgroundColor: accent }}
             />
           </div>
         ))}
       </div>
 
-      {/* Header */}
-      <div className="absolute top-16 left-6 right-6 flex justify-between items-center z-20">
-        <div className="flex items-center gap-3">
-          <img src={user?.avatar_url} className="w-8 h-8 rounded-full border border-zinc-800 grayscale" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-white">@{user?.login} / Wrapped</span>
+      {/* Header Info */}
+      <div className="relative z-50 w-full flex justify-between items-center mt-6">
+        <div className="flex items-center gap-4">
+          <div className="p-1 rounded-full border border-white/10">
+            <img src={user?.avatar_url} className="w-8 h-8 rounded-full grayscale" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">@{user?.login}</span>
+            <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-zinc-500">Technical_Wrapped_2024</span>
+          </div>
         </div>
-        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-zinc-500 hover:text-white">
-          <X size={24} />
+        <button onClick={onClose} className="p-3 bg-white/5 hover:bg-white/10 rounded-full transition-all text-white group">
+          <X size={20} className="group-hover:rotate-90 transition-transform duration-300" />
         </button>
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentSlide}
-          initial={{ opacity: 0, x: 50, scale: 0.95 }}
-          animate={{ opacity: 1, x: 0, scale: 1 }}
-          exit={{ opacity: 0, x: -50, scale: 0.95 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="relative z-10 w-full max-w-2xl flex flex-col items-center text-center space-y-12"
-        >
-          <div className="p-8 rounded-full bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 shadow-2xl">
-            {slides[currentSlide].icon}
-          </div>
+      {/* Main Content Area */}
+      <div className="relative z-40 flex-1 w-full flex items-center justify-center">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlide}
+            initial={{ opacity: 0, scale: 0.9, filter: "blur(20px)" }}
+            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, scale: 1.1, filter: "blur(20px)" }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full max-w-4xl flex flex-col items-center text-center space-y-12"
+          >
+            <motion.div 
+              initial={{ rotate: -10, y: 20 }}
+              animate={{ rotate: 0, y: 0 }}
+              className="p-10 rounded-3xl bg-white/5 backdrop-blur-3xl border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.5)]"
+              style={{ color: accent }}
+            >
+              {slides[currentSlide].icon}
+            </motion.div>
 
-          <div className="space-y-6">
-            <span className="text-[10px] uppercase tracking-[0.6em] text-zinc-600 font-black block">{slides[currentSlide].title}</span>
-            {slides[currentSlide].content ? (
-              <p className="text-3xl md:text-5xl font-bold italic leading-tight text-white/90">
-                {slides[currentSlide].content}
-              </p>
-            ) : (
-              <div className="space-y-4">
-                <h2 className="text-4xl md:text-7xl font-black italic uppercase tracking-tighter text-white">
-                  {slides[currentSlide].main}
-                </h2>
-                <p className="text-xl md:text-2xl text-zinc-500 font-medium leading-relaxed max-w-lg mx-auto">
-                  {slides[currentSlide].sub}
+            <div className="space-y-8">
+              <span className="text-[10px] uppercase tracking-[0.8em] text-zinc-500 font-black block" style={{ color: `${accent}88` }}>
+                {slides[currentSlide].title}
+              </span>
+              
+              {slides[currentSlide].content ? (
+                <p className="text-3xl md:text-6xl font-black italic tracking-tighter leading-[1] text-white uppercase max-w-3xl">
+                  {slides[currentSlide].content}
                 </p>
-              </div>
-            )}
-          </div>
-        </motion.div>
-      </AnimatePresence>
-
-      {/* Navigation Areas */}
-      <div className="absolute inset-0 flex z-10">
-        <div className="h-full w-1/3 cursor-pointer" onClick={prevSlide} />
-        <div className="h-full w-2/3 cursor-pointer" onClick={nextSlide} />
+              ) : (
+                <div className="space-y-6">
+                  <h2 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter text-white leading-[0.9]">
+                    {slides[currentSlide].main}
+                  </h2>
+                  <p className="text-xl md:text-3xl text-zinc-400 font-medium leading-tight max-w-2xl mx-auto italic">
+                    "{slides[currentSlide].sub}"
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      <div className="absolute bottom-12 text-[10px] font-black uppercase tracking-[0.4em] text-zinc-800">
-        Click_To_Advance
+      {/* Footer Navigation Hints */}
+      <div className="relative z-50 w-full flex flex-col items-center gap-6 mb-4">
+        <div className="flex items-center gap-12 text-zinc-600">
+           <button onClick={prevSlide} className="text-[10px] font-black uppercase tracking-[0.4em] hover:text-white transition-colors">Prev</button>
+           <div className="h-4 w-[1px] bg-zinc-800" />
+           <button onClick={nextSlide} className="text-[10px] font-black uppercase tracking-[0.4em] hover:text-white transition-colors">Next</button>
+        </div>
+        <div className="text-[8px] font-black uppercase tracking-[0.5em] text-zinc-800">
+          AUTO_ADVANCING_SYSTEM
+        </div>
+      </div>
+
+      {/* Invisible Interactive Zones */}
+      <div className="absolute inset-0 flex z-30">
+        <div className="h-full w-1/2 cursor-w-resize" onClick={prevSlide} />
+        <div className="h-full w-1/2 cursor-e-resize" onClick={nextSlide} />
       </div>
     </motion.div>
   );
