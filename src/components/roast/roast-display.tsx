@@ -31,7 +31,37 @@ export function RoastDisplay({
   const [expandedReceipt, setExpandedReceipt] = useState<number | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showWrapped, setShowWrapped] = useState(false);
+  const [activeStep, setActiveStep] = useState<number>(-1);
   const reportCardRef = useRef<HTMLDivElement>(null);
+  
+  const sectionRefs = useRef<any[]>([]);
+
+  const scrollToSection = (index: number) => {
+    const target = sectionRefs.current[index];
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const indexStr = entry.target.getAttribute("data-index");
+            if (indexStr) setActiveStep(Number(indexStr));
+          }
+        });
+      },
+      { threshold: 0.5, rootMargin: "-10% 0px -10% 0px" }
+    );
+
+    sectionRefs.current.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => observer.disconnect();
+  }, [steps, verdict, introduction, dnaTraits]);
 
   const themeColors: Record<string, string> = {
     elitist: "zinc-100",
@@ -78,10 +108,33 @@ export function RoastDisplay({
   };
 
   return (
-    <div className="space-y-[30vh] pb-[20vh]">
+    <div className="relative space-y-[30vh] pb-[20vh]">
+      {/* Cinematic Breadcrumbs */}
+      <div className="fixed right-8 top-1/2 -translate-y-1/2 z-[60] hidden md:flex flex-col gap-4">
+        {[
+          { label: "Intro", index: -1 },
+          ...steps.map((_: any, i: number) => ({ label: `0${i + 1}`, index: i })),
+          { label: "DNA", index: 100 },
+          { label: "Verdict", index: 102 }
+        ].map((item) => (
+          <button
+            key={item.index}
+            onClick={() => scrollToSection(item.index)}
+            className="group relative flex items-center justify-end gap-4"
+          >
+            <span className={`text-[9px] font-black uppercase tracking-widest transition-all duration-500 ${activeStep === item.index ? 'opacity-100' : 'opacity-0 group-hover:opacity-40'}`}>
+              {item.label}
+            </span>
+            <div className={`w-1.5 h-1.5 rounded-full transition-all duration-500 border border-white/10 ${activeStep === item.index ? 'bg-white scale-125' : 'bg-white/5'}`} />
+          </button>
+        ))}
+      </div>
+
       {/* Introduction: The Hook */}
       {introduction && (
         <motion.div
+          ref={(el) => { if (el) sectionRefs.current[-1] = el; }}
+          data-index="-1"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
@@ -123,6 +176,11 @@ export function RoastDisplay({
               )}
             </motion.div>
           )}
+
+          <button 
+             onClick={() => scrollToSection(0)}
+             className="text-[9px] uppercase tracking-[0.4em] font-black text-zinc-800 hover:text-white transition-all text-left animate-pulse"
+          >Scroll_To_Begin_Audit</button>
         </motion.div>
       )}
 
@@ -131,6 +189,8 @@ export function RoastDisplay({
         {steps.map((step: any, i: number) => (
           <motion.div
             key={i}
+            ref={(el) => { if (el) sectionRefs.current[i] = el; }}
+            data-index={i}
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-10%" }}
@@ -185,6 +245,14 @@ export function RoastDisplay({
                 </div>
               )}
             </div>
+
+            <button 
+               onClick={() => scrollToSection(i === steps.length - 1 ? 100 : i + 1)}
+               className="text-[8px] uppercase tracking-[0.4em] font-black text-zinc-900 hover:text-white transition-all text-left group flex items-center gap-4"
+            >
+               <span>Next_Observation</span>
+               <div className="h-[1px] w-8 bg-zinc-900 group-hover:bg-white transition-all" />
+            </button>
           </motion.div>
         ))}
       </div>
@@ -192,6 +260,8 @@ export function RoastDisplay({
       {/* DNA Traits Section */}
       {dnaTraits.length > 0 && (
         <motion.div
+          ref={(el) => { if (el) sectionRefs.current[100] = el; }}
+          data-index="100"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
@@ -231,12 +301,19 @@ export function RoastDisplay({
               </div>
             ))}
           </div>
+
+          <button 
+             onClick={() => scrollToSection(102)}
+             className="text-[9px] uppercase tracking-[0.4em] font-black text-zinc-800 hover:text-white transition-all text-left pt-12"
+          >Seal_The_Judgment</button>
         </motion.div>
       )}
 
       {/* Summary Remedy: The Path to Redemption */}
       {roast?.summary_remedy && (
         <motion.div
+          ref={(el) => { if (el) sectionRefs.current[101] = el; }}
+          data-index="101"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -291,6 +368,8 @@ export function RoastDisplay({
       {/* Final Verdict: The Cinematic Conclusion */}
       {verdict && (
         <motion.div
+          ref={(el) => { if (el) sectionRefs.current[102] = el; }}
+          data-index="102"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}

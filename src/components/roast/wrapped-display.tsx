@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GitHubUser } from "@/types/github";
-import { X, ChevronRight, ChevronLeft, Zap, Award, Ghost, Flame, Target } from "lucide-react";
+import { X, ChevronRight, ChevronLeft, Zap, Award, Ghost, Flame, Target, Clock, TrendingDown } from "lucide-react";
 
 interface WrappedDisplayProps {
   user?: GitHubUser;
@@ -15,6 +15,7 @@ interface WrappedDisplayProps {
 export function WrappedDisplay({ user, roast, vibe, onClose }: WrappedDisplayProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const wrapped = roast?.wrapped || {};
+  const regression = wrapped.regression || {};
 
   const themeGradients: Record<string, string> = {
     elitist: "from-zinc-900 via-black to-zinc-900",
@@ -38,6 +39,14 @@ export function WrappedDisplay({ user, roast, vibe, onClose }: WrappedDisplayPro
       title: "The Narrative Begins",
       content: roast?.introduction,
       icon: <Zap size={32} />,
+    },
+    {
+      title: "The Regression",
+      isRegression: true,
+      then: regression.then,
+      now: regression.now,
+      finalVerdict: regression.verdict,
+      icon: <Clock size={32} />,
     },
     {
       title: "Your Spirit Language",
@@ -161,7 +170,35 @@ export function WrappedDisplay({ user, roast, vibe, onClose }: WrappedDisplayPro
                 {slides[currentSlide].title}
               </span>
               
-              {slides[currentSlide].content ? (
+              {slides[currentSlide].isRegression ? (
+                <div className="space-y-12 w-full max-w-3xl mx-auto">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start text-left">
+                      <div className="space-y-4">
+                         <div className="flex items-center gap-3 text-zinc-500">
+                            <Clock size={14} />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Then_Early_Days</span>
+                         </div>
+                         <p className="text-xl md:text-2xl text-white font-medium italic leading-tight">
+                            "{slides[currentSlide].then}"
+                         </p>
+                      </div>
+                      <div className="space-y-4">
+                         <div className="flex items-center gap-3" style={{ color: accent }}>
+                            <TrendingDown size={14} />
+                            <span className="text-[10px] font-black uppercase tracking-widest">Now_The_Downfall</span>
+                         </div>
+                         <p className="text-xl md:text-2xl text-white font-medium italic leading-tight">
+                            "{slides[currentSlide].now}"
+                         </p>
+                      </div>
+                   </div>
+                   <div className="pt-8 border-t border-white/5">
+                      <p className="text-2xl md:text-4xl font-black italic uppercase tracking-tighter text-white leading-tight">
+                         {slides[currentSlide].finalVerdict}
+                      </p>
+                   </div>
+                </div>
+              ) : slides[currentSlide].content ? (
                 <p className="text-3xl md:text-6xl font-black italic tracking-tighter leading-[1] text-white uppercase max-w-3xl">
                   {slides[currentSlide].content}
                 </p>

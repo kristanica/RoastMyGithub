@@ -85,6 +85,47 @@ export class GitHubService {
     }
   }
 
+  static async getOldestCommits(username: string): Promise<string[]> {
+    try {
+      // Step 1: Get user repos sorted by creation date (oldest first)
+      const response = await fetch(`${GITHUB_API_URL}/users/${username}/repos?sort=created&direction=asc&per_page=10`, {
+        headers: {
+          "Accept": "application/vnd.github.v3+json",
+          ...this.getAuthHeader(),
+        },
+      });
+
+      if (!response.ok) return [];
+      const repos = await response.json();
+      
+      // Find the first non-fork repo
+      const oldestRepo = repos.find((r: any) => !r.fork);
+      if (!oldestRepo) return [];
+
+      // Step 2: Get commits from that repo
+      // We'll just take the last few from the first page for simplicity, 
+      // as many "first repos" are small.
+      const commitsResponse = await fetch(`${GITHUB_API_URL}/repos/${username}/${oldestRepo.name}/commits?per_page=100`, {
+        headers: {
+          "Accept": "application/vnd.github.v3+json",
+          ...this.getAuthHeader(),
+        },
+      });
+
+      if (!commitsResponse.ok) return [];
+      const commits = await commitsResponse.json();
+      
+      // Commits are descending, so the end of the list is the oldest
+      return commits
+        .slice(-5)
+        .map((c: any) => c.commit.message)
+        .filter((m: string) => !m.startsWith("Merge "));
+    } catch (error) {
+      console.error("Error fetching oldest commits:", error);
+      return [];
+    }
+  }
+
   static async getRepositoryCommits(owner: string, repo: string): Promise<string[]> {
     try {
       const response = await fetch(`${GITHUB_API_URL}/repos/${owner}/${repo}/commits?per_page=10`, {

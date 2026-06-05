@@ -13,11 +13,12 @@ const VIBE_PROMPTS: Record<RoastVibe, string> = {
 };
 
 export class AIService {
-  static async streamProfileRoast(user: GitHubUser, repos: GitHubRepository[], vibe: RoastVibe = 'elitist', commits: string[] = []) {
+  static async streamProfileRoast(user: GitHubUser, repos: GitHubRepository[], vibe: RoastVibe = 'elitist', commits: string[] = [], oldestCommits: string[] = []) {
     const persona = VIBE_PROMPTS[vibe];
     const reposSummary = repos.slice(0, 10).map(r => r.name + " (" + r.stargazers_count + " stars)").join(', ');
     const languages = Array.from(new Set(repos.map(r => r.language).filter(Boolean))).join(', ');
     const commitSummary = commits.length > 0 ? commits.join(' | ') : "No recent public commit messages found.";
+    const oldestCommitSummary = oldestCommits.length > 0 ? oldestCommits.join(' | ') : "No historical public commit messages found.";
     
     const extraMetrics = vibe === 'recruiter' 
       ? `,"hireability_score": "A number from 0-100", "portfolio_audit": "A 1-sentence professional summary of their technical presence."`
@@ -53,7 +54,12 @@ export class AIService {
           "spirit_language": { "name": "Language", "reason": "1-sentence sarcastic reason" },
           "worst_habit": { "name": "Habit", "description": "1-sentence mean description" },
           "best_moment": { "name": "Best choice", "description": "1-sentence backhanded compliment" },
-          "coding_persona": { "title": "A brutal title", "description": "1-sentence summary of their failure" }
+          "coding_persona": { "title": "A brutal title", "description": "1-sentence summary of their failure" },
+          "regression": {
+            "then": "Summary of their early ambitious/idealistic commits",
+            "now": "Summary of their recent lazy/given-up commits",
+            "verdict": "A 1-sentence roast about their technical downfall"
+          }
         },
         "summary_remedy": "A concise 2-sentence reality check on how to not be terrible.",
         "grade": "S, A, B, C, D, or F",
@@ -69,8 +75,10 @@ export class AIService {
       - Languages: ${languages}
       - Repos Summary: ${reposSummary}
       - Recent Commits: ${commitSummary}
+      - First Public Commits: ${oldestCommitSummary}
 
-      Write the story of this developer's technical life. Make it a real roast.
+      Write the story of this developer's technical life. Make it a real roast. 
+      Analyze "The Regression" slide by comparing their first commits (when they were naive and ambitious) to their latest ones (where the despair is evident).
     `;
 
     return openai.chat.completions.create({

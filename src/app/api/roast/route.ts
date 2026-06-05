@@ -26,11 +26,12 @@ export async function GET(request: NextRequest) {
       stream = await AIService.streamRepositoryRoast(repoData, readme, vibe, commits);
     } else {
       userData = await GitHubService.getUserProfile(username);
-      const [repos, commits] = await Promise.all([
+      const [repos, commits, oldestCommits] = await Promise.all([
         GitHubService.getUserRepositories(username),
-        GitHubService.getRecentCommits(username)
+        GitHubService.getRecentCommits(username),
+        GitHubService.getOldestCommits(username)
       ]);
-      stream = await AIService.streamProfileRoast(userData, repos, vibe, commits);
+      stream = await AIService.streamProfileRoast(userData, repos, vibe, commits, oldestCommits);
     }
 
     const encoder = new TextEncoder();
