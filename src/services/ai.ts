@@ -187,4 +187,53 @@ export class AIService {
       stream: true,
     });
   }
+
+  static async streamPanelRoast(user: GitHubUser, repos: GitHubRepository[], commits: string[] = []) {
+    const reposSummary = repos.slice(0, 10).map(r => r.name).join(', ');
+    const commitSummary = commits.length > 0 ? commits.join(' | ') : "No recent commits.";
+    
+    const prompt = `
+      You are hosting a "Technical Hearing" where four distinct judges debate the user's GitHub profile. 
+      The judges are:
+      1. **elitist**: A condescending, brilliant senior dev. Dry, sarcastic, hates mediocrity.
+      2. **brogrammer**: Obsessed with scale and hype. Thinks everything is "mid" or "L".
+      3. **chaos**: A gremlin who loves technical debt and mockery.
+      4. **recruiter**: A soul-crushing HR bot who speaks in buzzwords but delivers brutal professional insults.
+
+      They must argue with each other about the user's code, commits, and repos. 
+      IMPORTANT: No flowery language. Direct technical insults and sarcasm.
+      The judges should directly address each other.
+      
+      Output ONLY valid JSON matching this schema:
+      {
+        "hearing_title": "A short dramatic title for the session",
+        "dialogue": [
+          { 
+            "judge": "elitist | brogrammer | chaos | recruiter", 
+            "text": "The sharp roast line or interaction with another judge.",
+            "meta": "Optional technical alert like '[SCAN_INTERRUPTED]'"
+          }
+        ],
+        "final_consensus": "A 1-sentence collective decision.",
+        "overall_grade": "S, A, B, C, D, or F"
+      }
+
+      Data:
+      - User: ${user.login} (${user.bio})
+      - Repos: ${reposSummary}
+      - Recent Commits: ${commitSummary}
+
+      Start the hearing. Make it a chaotic but technical chat. Use lowercase judge names in the JSON.
+    `;
+
+    return openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are a technical court transcriber. Output ONLY valid JSON." },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" },
+      stream: true,
+    });
+  }
 }

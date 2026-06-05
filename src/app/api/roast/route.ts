@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
   const username = searchParams.get("username");
   const repo = searchParams.get("repo");
   const vibe = (searchParams.get("vibe") as RoastVibe) || "elitist";
+  const type = searchParams.get("type");
 
   if (!username) {
     return NextResponse.json({ error: "Username is required" }, { status: 400 });
@@ -17,7 +18,14 @@ export async function GET(request: NextRequest) {
     let stream;
     let userData = null;
 
-    if (repo) {
+    if (type === "panel") {
+      userData = await GitHubService.getUserProfile(username);
+      const [repos, commits] = await Promise.all([
+        GitHubService.getUserRepositories(username),
+        GitHubService.getRecentCommits(username)
+      ]);
+      stream = await AIService.streamPanelRoast(userData, repos, commits);
+    } else if (repo) {
       const [repoData, readme, commits] = await Promise.all([
         GitHubService.getRepository(username, repo),
         GitHubService.getReadme(username, repo),

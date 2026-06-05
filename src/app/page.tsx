@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { RoastDisplay } from "@/components/roast/roast-display";
 import { BattleDisplay } from "@/components/roast/battle-display";
+import { PanelDisplay } from "@/components/roast/panel-display";
 import { GitHubUser, RoastVibe } from "@/types/github";
 import { Info, X, Zap, Terminal } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
@@ -19,7 +20,7 @@ const VIBE_CONFIG: Record<RoastVibe, { label: string; desc: string }> = {
 export default function Home() {
   const [query, setQuery] = useState("");
   const [query2, setQuery2] = useState("");
-  const [isBattleMode, setIsBattleMode] = useState(false);
+  const [mode, setMode] = useState<"solo" | "battle" | "panel">("solo");
   const [vibe, setVibe] = useState<RoastVibe>("elitist");
   const [user, setUser] = useState<GitHubUser | null>(null);
   const [user2, setUser2] = useState<GitHubUser | null>(null);
@@ -59,12 +60,12 @@ export default function Home() {
       targetQuery: string; 
       targetQuery2?: string; 
       targetVibe: RoastVibe; 
-      type: "solo" | "battle" 
+      type: "solo" | "battle" | "panel" 
     }) => {
       setUser(null);
       setUser2(null);
       setRoastData(null);
-      setLoadingLogs(["[SYS] Initializing " + (type === "battle" ? "Combat_Protocol" : "Judgment_Protocol") + "..."]);
+      setLoadingLogs(["[SYS] Initializing " + (type === "battle" ? "Combat_Protocol" : type === "panel" ? "Hearing_Protocol" : "Judgment_Protocol") + "..."]);
 
       const logInterval = setInterval(() => {
         const randomMsg = loadingPool[Math.floor(Math.random() * loadingPool.length)];
@@ -72,11 +73,13 @@ export default function Home() {
       }, 1500);
 
       try {
-        let url = type === "battle" 
-          ? `/api/battle?u1=${targetQuery}&u2=${targetQuery2}&vibe=${targetVibe}`
-          : `/api/roast?username=${targetQuery}&vibe=${targetVibe}`;
+        let url = `/api/roast?username=${targetQuery}&vibe=${targetVibe}`;
         
-        if (type === "solo" && targetQuery.includes("/")) {
+        if (type === "battle") {
+          url = `/api/battle?u1=${targetQuery}&u2=${targetQuery2}&vibe=${targetVibe}`;
+        } else if (type === "panel") {
+          url = `/api/roast?username=${targetQuery}&type=panel`;
+        } else if (type === "solo" && targetQuery.includes("/")) {
           const [username, repo] = targetQuery.split("/");
           url = `/api/roast?username=${username}&repo=${repo}&vibe=${targetVibe}`;
         }
@@ -122,9 +125,36 @@ export default function Home() {
               const data = JSON.parse(accumulatedRaw);
               setRoastData(data);
             } else {
+              // Partial parsing for better UX
               const introMatch = accumulatedRaw.match(/"introduction":\s*"([^"]*)"?/);
-              if (introMatch) {
-                setRoastData((prev: any) => ({ ...prev, introduction: introMatch[1] }));
+              const titleMatch = accumulatedRaw.match(/"hearing_title":\s*"([^"]*)"?/);
+              
+              if (introMatch || titleMatch) {
+                setRoastData((prev: any) => {
+                  const newData = { ...prev };
+                  if (introMatch) newData.introduction = introMatch[1];
+                  if (titleMatch) {
+                    newData.hearing_title = titleMatch[1];
+                    // Ensure we have a dialogue array to trigger PanelDisplay
+                    if (!newData.dialogue) newData.dialogue = [];
+                  }
+                  
+                  // Try to extract dialogue items partially
+                  if (titleMatch) {
+                    const dialogueSection = accumulatedRaw.split('"dialogue":')[1];
+                    if (dialogueSection) {
+                      const items = [];
+                      const itemMatches = dialogueSection.matchAll(/\{\s*"judge":\s*"([^"]*)",\s*"text":\s*"([^"]*)"/g);
+                      for (const match of itemMatches) {
+                        items.push({ judge: match[1], text: match[2] });
+                      }
+                      if (items.length > (prev?.dialogue?.length || 0)) {
+                        newData.dialogue = items;
+                      }
+                    }
+                  }
+                  return newData;
+                });
               }
             }
           } catch (e) { }
@@ -138,17 +168,17 @@ export default function Home() {
   const handleRoast = (e: React.FormEvent) => {
     e.preventDefault();
     if (!query || roastMutation.isPending) return;
-    if (isBattleMode && !query2) return;
+    if (mode === "battle" && !query2) return;
     roastMutation.mutate({ 
       targetQuery: query, 
       targetQuery2: query2, 
       targetVibe: vibe,
-      type: isBattleMode ? "battle" : "solo" 
+      type: mode 
     });
   };
 
   return (
-    <div className="min-h-screen selection:bg-white selection:text-black overflow-hidden bg-black">
+    <div className="min-h-screen selection:bg-white selection:text-black overflow-hidden bg-black text-white font-sans">
       <AnimatePresence>
         {showInfo && (
           <motion.div
@@ -212,33 +242,40 @@ export default function Home() {
             <div className="space-y-8">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}>
                 <h1 className="text-7xl md:text-[8.5rem] font-black tracking-tighter text-white leading-[0.85] uppercase italic">
-                  {isBattleMode ? "Dual" : "Roast"} <br /> {isBattleMode ? "Combat" : "GitHub"}<span className="text-zinc-900 not-italic">.</span>
+                  {mode === "battle" ? "Dual" : mode === "panel" ? "Panel" : "Roast"} <br /> {mode === "battle" ? "Combat" : mode === "panel" ? "Hearing" : "GitHub"}<span className="text-zinc-900 not-italic">.</span>
                 </h1>
               </motion.div>
 
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="flex gap-8 border-b border-zinc-900 pb-2 max-w-fit">
                 <button 
-                  onClick={() => setIsBattleMode(false)}
-                  className={`text-[10px] font-black uppercase tracking-[0.4em] transition-all relative ${!isBattleMode ? 'text-white' : 'text-zinc-700 hover:text-zinc-500'}`}
+                  onClick={() => setMode("solo")}
+                  className={`text-[10px] font-black uppercase tracking-[0.4em] transition-all relative ${mode === "solo" ? 'text-white' : 'text-zinc-700 hover:text-zinc-500'}`}
                 >
                   Solo_Judgment
-                  {!isBattleMode && <motion.div layoutId="mode-underline" className="absolute -bottom-[11px] left-0 right-0 h-[2px] bg-white" />}
+                  {mode === "solo" && <motion.div layoutId="mode-underline" className="absolute -bottom-[11px] left-0 right-0 h-[2px] bg-white" />}
                 </button>
                 <button 
-                  onClick={() => setIsBattleMode(true)}
-                  className={`text-[10px] font-black uppercase tracking-[0.4em] transition-all relative ${isBattleMode ? 'text-white' : 'text-zinc-700 hover:text-zinc-500'}`}
+                  onClick={() => setMode("battle")}
+                  className={`text-[10px] font-black uppercase tracking-[0.4em] transition-all relative ${mode === "battle" ? 'text-white' : 'text-zinc-700 hover:text-zinc-500'}`}
                 >
                   Dual_Combat
-                  {isBattleMode && <motion.div layoutId="mode-underline" className="absolute -bottom-[11px] left-0 right-0 h-[2px] bg-white" />}
+                  {mode === "battle" && <motion.div layoutId="mode-underline" className="absolute -bottom-[11px] left-0 right-0 h-[2px] bg-white" />}
+                </button>
+                <button 
+                  onClick={() => setMode("panel")}
+                  className={`text-[10px] font-black uppercase tracking-[0.4em] transition-all relative ${mode === "panel" ? 'text-white' : 'text-zinc-700 hover:text-zinc-500'}`}
+                >
+                  Panel_Hearing
+                  {mode === "panel" && <motion.div layoutId="mode-underline" className="absolute -bottom-[11px] left-0 right-0 h-[2px] bg-white" />}
                 </button>
               </motion.div>
             </div>
 
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="grid md:grid-cols-2 gap-16 items-start">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="grid md:grid-cols-2 gap-16 items-start text-white">
               <form onSubmit={handleRoast} className="space-y-8">
                 <div className="space-y-6">
                   <div className="group space-y-3">
-                    <p className="text-zinc-700 text-[10px] font-black uppercase tracking-[0.3em]">{isBattleMode ? "Subject_01:" : "Identify_Subject:"}</p>
+                    <p className="text-zinc-700 text-[10px] font-black uppercase tracking-[0.3em]">{mode === "battle" ? "Subject_01:" : "Identify_Subject:"}</p>
                     <Input
                       type="text"
                       placeholder="username or owner/repo"
@@ -249,7 +286,7 @@ export default function Home() {
                     />
                   </div>
 
-                  {isBattleMode && (
+                  {mode === "battle" && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="group space-y-3">
                       <p className="text-zinc-700 text-[10px] font-black uppercase tracking-[0.3em]">Subject_02:</p>
                       <Input
@@ -264,7 +301,7 @@ export default function Home() {
                 </div>
 
                 <button type="submit" className="text-[10px] uppercase tracking-[0.6em] font-black text-zinc-500 hover:text-white transition-all flex items-center gap-4 group pt-2">
-                  <span>{isBattleMode ? "Start_Battle" : "Initiate_Judgment"}</span>
+                  <span>{mode === "battle" ? "Start_Battle" : mode === "panel" ? "Summon_Panel" : "Initiate_Judgment"}</span>
                   <div className="w-12 h-[1px] bg-zinc-900 group-hover:w-20 group-hover:bg-white transition-all duration-700" />
                 </button>
               </form>
@@ -276,24 +313,31 @@ export default function Home() {
                     <button
                       key={v}
                       type="button"
+                      disabled={mode === "panel"}
                       onClick={() => setVibe(v)}
                       className={`text-left p-4 border transition-all duration-500 group relative overflow-hidden ${
-                        vibe === v 
+                        vibe === v && mode !== "panel"
                           ? "border-white/20 bg-white/5" 
-                          : "border-zinc-900 text-zinc-600 hover:border-zinc-800"
+                          : "border-zinc-900 text-zinc-600 hover:border-zinc-800 disabled:opacity-30 disabled:hover:border-zinc-900"
                       }`}
                     >
-                      {vibe === v && <motion.div layoutId="vibe-bg" className="absolute inset-0 bg-white/5 -z-10" />}
-                      <div className="flex justify-between items-center">
-                        <p className={`text-[10px] font-black uppercase tracking-widest transition-colors ${vibe === v ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400'}`}>
+                      {vibe === v && mode !== "panel" && <motion.div layoutId="vibe-bg" className="absolute inset-0 bg-white/5 -z-10" />}
+                      <div className="flex justify-between items-center text-white">
+                        <p className={`text-[10px] font-black uppercase tracking-widest transition-colors ${vibe === v && mode !== "panel" ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400'}`}>
                           {VIBE_CONFIG[v].label}
                         </p>
                       </div>
-                      <p className={`text-[9px] mt-1 leading-relaxed font-medium transition-colors ${vibe === v ? 'text-zinc-500' : 'text-zinc-800'}`}>
+                      <p className={`text-[9px] mt-1 leading-relaxed font-medium transition-colors ${vibe === v && mode !== "panel" ? 'text-zinc-500' : 'text-zinc-800'}`}>
                         {VIBE_CONFIG[v].desc}
                       </p>
                     </button>
                   ))}
+                  {mode === "panel" && (
+                     <div className="col-span-2 p-4 border border-white/10 bg-white/5 rounded-sm">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white mb-2">Panel_Mode_Active</p>
+                        <p className="text-[9px] text-zinc-500 leading-relaxed">All judges will be present. Selection protocol bypassed.</p>
+                     </div>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -345,6 +389,8 @@ export default function Home() {
             
             {user2 ? (
               <BattleDisplay battle={roastData} user1={user || undefined} user2={user2} isStreaming={roastMutation.isPending} />
+            ) : roastData.dialogue ? (
+              <PanelDisplay panelData={roastData} user={user || undefined} isStreaming={roastMutation.isPending} />
             ) : (
               <RoastDisplay roast={roastData} user={user || undefined} isStreaming={roastMutation.isPending} vibe={vibe} />
             )}
