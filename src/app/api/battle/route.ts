@@ -14,16 +14,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const [user1, repos1, user2, repos2] = await Promise.all([
+    const [user1, repos1, commits1, user2, repos2, commits2] = await Promise.all([
       GitHubService.getUserProfile(u1),
       GitHubService.getUserRepositories(u1),
+      GitHubService.getRecentCommits(u1),
       GitHubService.getUserProfile(u2),
       GitHubService.getUserRepositories(u2),
+      GitHubService.getRecentCommits(u2),
     ]);
 
     const stream = await AIService.streamBattleRoast(
-      { user: user1, repos: repos1 },
-      { user: user2, repos: repos2 },
+      { user: user1, repos: repos1, commits: commits1 },
+      { user: user2, repos: repos2, commits: commits2 },
       vibe
     );
 

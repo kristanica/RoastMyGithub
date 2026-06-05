@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GitHubUser } from "@/types/github";
 import { Share2, Loader2, Sparkles, ChevronDown, Download } from "lucide-react";
@@ -16,7 +16,12 @@ interface RoastDisplayProps {
   vibe?: string;
 }
 
-export function RoastDisplay({ roast, user, isStreaming, vibe = "elitist" }: RoastDisplayProps) {
+export function RoastDisplay({
+  roast,
+  user,
+  isStreaming,
+  vibe = "elitist",
+}: RoastDisplayProps) {
   const introduction = roast?.introduction || "";
   const steps = roast?.steps || [];
   const verdict = roast?.verdict || "";
@@ -40,9 +45,9 @@ export function RoastDisplay({ roast, user, isStreaming, vibe = "elitist" }: Roa
   const handleDownload = async () => {
     if (!reportCardRef.current || isDownloading) return;
     setIsDownloading(true);
-    
+
     // Give the DOM a moment to ensure the off-screen element is ready
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     try {
       const options = {
@@ -52,15 +57,15 @@ export function RoastDisplay({ roast, user, isStreaming, vibe = "elitist" }: Roa
         style: {
           opacity: "1",
           visibility: "visible",
-        }
+        },
       };
 
       // Call once to "warm up" and ensure images/fonts are cached
       await toPng(reportCardRef.current, options);
-      
+
       // Call again to get the final high-quality result
       const dataUrl = await toPng(reportCardRef.current, options);
-      
+
       const link = document.createElement("a");
       link.download = `roast-${user?.login || "github"}.png`;
       link.href = dataUrl;
@@ -88,25 +93,34 @@ export function RoastDisplay({ roast, user, isStreaming, vibe = "elitist" }: Roa
           </p>
 
           {hireabilityScore && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 1 }}
               className="p-8 border border-zinc-900 bg-zinc-950/50 space-y-4 max-w-xl"
             >
               <div className="flex justify-between items-end">
-                <span className="text-[10px] uppercase tracking-[0.4em] font-black text-zinc-500">Hireability_Assessment</span>
-                <span className="text-4xl font-black text-white">{hireabilityScore}<span className="text-sm text-zinc-700">/100</span></span>
+                <span className="text-[10px] uppercase tracking-[0.4em] font-black text-zinc-500">
+                  Hireability_Assessment
+                </span>
+                <span className="text-4xl font-black text-white">
+                  {hireabilityScore}
+                  <span className="text-sm text-zinc-700">/100</span>
+                </span>
               </div>
               <div className="h-1 bg-zinc-900 w-full overflow-hidden">
-                <motion.div 
+                <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${hireabilityScore}%` }}
                   transition={{ delay: 1.5, duration: 1 }}
                   className="h-full bg-white"
                 />
               </div>
-              {portfolioAudit && <p className="text-xs text-zinc-500 italic leading-relaxed">{portfolioAudit}</p>}
+              {portfolioAudit && (
+                <p className="text-xs text-zinc-500 italic leading-relaxed">
+                  {portfolioAudit}
+                </p>
+              )}
             </motion.div>
           )}
         </motion.div>
@@ -143,12 +157,18 @@ export function RoastDisplay({ roast, user, isStreaming, vibe = "elitist" }: Roa
               {step.receipt && (
                 <div className="pt-2">
                   <button
-                    onClick={() => setExpandedReceipt(expandedReceipt === i ? null : i)}
+                    onClick={() =>
+                      setExpandedReceipt(expandedReceipt === i ? null : i)
+                    }
                     className="flex items-center gap-2 text-[9px] uppercase tracking-[0.2em] font-black text-zinc-800 hover:text-white transition-colors"
                   >
-                    <span>{expandedReceipt === i ? "Hide_Evidence" : "Show_Evidence"}</span>
+                    <span>
+                      {expandedReceipt === i
+                        ? "Hide_Evidence"
+                        : "Show_Evidence"}
+                    </span>
                   </button>
-                  
+
                   <AnimatePresence>
                     {expandedReceipt === i && (
                       <motion.div
@@ -178,21 +198,29 @@ export function RoastDisplay({ roast, user, isStreaming, vibe = "elitist" }: Roa
           className="min-h-[40vh] flex flex-col justify-center space-y-16"
         >
           <div className="flex items-center gap-6">
-            <span className={`text-[10px] uppercase tracking-[0.6em] text-${accentColor} font-black`}>
+            <span
+              className={`text-[10px] uppercase tracking-[0.6em] text-${accentColor} font-black`}
+            >
               Technical_DNA
             </span>
             <div className={`h-[1px] flex-1 bg-zinc-900`} />
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-12">
             {dnaTraits.map((trait: any, i: number) => (
               <div key={i} className="space-y-6">
                 <div className="flex justify-between items-end">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{trait.name}</p>
-                  <p className={`text-xl font-black italic text-${accentColor}`}>{trait.value}%</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                    {trait.name}
+                  </p>
+                  <p
+                    className={`text-xl font-black italic text-${accentColor}`}
+                  >
+                    {trait.value}%
+                  </p>
                 </div>
                 <div className="h-1 w-full bg-zinc-900 relative overflow-hidden">
-                  <motion.div 
+                  <motion.div
                     initial={{ width: 0 }}
                     whileInView={{ width: `${trait.value}%` }}
                     viewport={{ once: true }}
@@ -221,7 +249,7 @@ export function RoastDisplay({ roast, user, isStreaming, vibe = "elitist" }: Roa
             </span>
             <div className={`h-[1px] flex-1 bg-zinc-900`} />
           </div>
-          
+
           <div className="space-y-6">
             <p className="text-2xl md:text-4xl text-white font-medium leading-relaxed max-w-4xl italic">
               "{roast.summary_remedy}"
@@ -305,8 +333,14 @@ export function RoastDisplay({ roast, user, isStreaming, vibe = "elitist" }: Roa
               disabled={isDownloading}
               className="group flex items-center gap-3 text-[9px] uppercase tracking-[0.2em] font-black text-zinc-600 hover:text-white transition-all disabled:opacity-50"
             >
-              {isDownloading ? <Loader2 className="animate-spin" size={14} /> : <Download size={14} />}
-              <span>{isDownloading ? "Generating_Asset..." : "Download_Audit_Card"}</span>
+              {isDownloading ? (
+                <Loader2 className="animate-spin" size={14} />
+              ) : (
+                <Download size={14} />
+              )}
+              <span>
+                {isDownloading ? "Generating_Asset..." : "Download_Audit_Card"}
+              </span>
             </button>
           </motion.div>
         </motion.div>
@@ -314,11 +348,11 @@ export function RoastDisplay({ roast, user, isStreaming, vibe = "elitist" }: Roa
 
       <AnimatePresence>
         {showWrapped && (
-          <WrappedDisplay 
-            user={user} 
-            roast={roast} 
-            vibe={vibe} 
-            onClose={() => setShowWrapped(false)} 
+          <WrappedDisplay
+            user={user}
+            roast={roast}
+            vibe={vibe}
+            onClose={() => setShowWrapped(false)}
           />
         )}
       </AnimatePresence>

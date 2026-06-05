@@ -312,7 +312,7 @@ export default function Home() {
             {user2 ? (
               <BattleDisplay battle={roastData} user1={user || undefined} user2={user2} isStreaming={roastMutation.isPending} />
             ) : (
-              <RoastDisplay roast={roastData} user={user || undefined} isStreaming={roastMutation.isPending} />
+              <RoastDisplay roast={roastData} user={user || undefined} isStreaming={roastMutation.isPending} vibe={vibe} />
             )}
 
             {!roastMutation.isPending && (

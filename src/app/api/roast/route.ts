@@ -18,13 +18,19 @@ export async function GET(request: NextRequest) {
     let userData = null;
 
     if (repo) {
-      const repoData = await GitHubService.getRepository(username, repo);
-      const readme = await GitHubService.getReadme(username, repo);
-      stream = await AIService.streamRepositoryRoast(repoData, readme, vibe);
+      const [repoData, readme, commits] = await Promise.all([
+        GitHubService.getRepository(username, repo),
+        GitHubService.getReadme(username, repo),
+        GitHubService.getRepositoryCommits(username, repo)
+      ]);
+      stream = await AIService.streamRepositoryRoast(repoData, readme, vibe, commits);
     } else {
       userData = await GitHubService.getUserProfile(username);
-      const repos = await GitHubService.getUserRepositories(username);
-      stream = await AIService.streamProfileRoast(userData, repos, vibe);
+      const [repos, commits] = await Promise.all([
+        GitHubService.getUserRepositories(username),
+        GitHubService.getRecentCommits(username)
+      ]);
+      stream = await AIService.streamProfileRoast(userData, repos, vibe, commits);
     }
 
     const encoder = new TextEncoder();
