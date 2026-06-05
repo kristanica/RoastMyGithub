@@ -10,10 +10,10 @@ import { Info, X, Zap, Terminal } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 
 const VIBE_CONFIG: Record<RoastVibe, { label: string; desc: string }> = {
-  elitist: { label: "Elitist", desc: "Brutally honest senior dev." },
-  brogrammer: { label: "Brogrammer", desc: "Bleeding edge, no tests." },
-  chaos: { label: "Chaos", desc: "Loves spaghetti and hacks." },
-  recruiter: { label: "Recruiter", desc: "Passive-aggressive HR." },
+  elitist: { label: "Elitist", desc: "Condescending snob." },
+  brogrammer: { label: "Brogrammer", desc: "Obsessed with scale." },
+  chaos: { label: "Chaos", desc: "Spaghetti enthusiast." },
+  recruiter: { label: "Recruiter", desc: "Soul-crushing HR." },
 };
 
 export default function Home() {
@@ -148,33 +148,49 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen selection:bg-white selection:text-black overflow-x-hidden">
+    <div className="min-h-screen selection:bg-white selection:text-black overflow-hidden bg-black">
       <AnimatePresence>
         {showInfo && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex items-center justify-center p-6"
+            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6"
           >
             <motion.div
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
-              className="max-w-xl w-full space-y-12"
+              className="max-w-2xl w-full bg-zinc-950 border border-zinc-900 p-12 space-y-12 relative overflow-hidden"
             >
-              <div className="flex justify-between items-start">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 text-white">
-                    <Zap size={20} className="fill-white" />
-                    <h2 className="text-2xl font-bold tracking-tighter uppercase italic">Vibe_Protocol_Activated</h2>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 blur-[80px] rounded-full -mr-32 -mt-32" />
+              
+              <div className="flex justify-between items-start relative z-10">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-4 text-white">
+                    <Zap size={24} className="fill-white" />
+                    <h2 className="text-3xl font-black tracking-tighter uppercase italic">System_Manifesto</h2>
                   </div>
-                  <p className="text-zinc-400 text-lg leading-relaxed">
-                    This website was built using <span className="text-white font-bold">100% Vibe Coding</span>.
-                    Zero manual logic, zero design specs—just pure intent.
-                  </p>
+                  <div className="space-y-6 text-zinc-400 text-lg leading-relaxed font-medium">
+                    <p>
+                      RoastMyGitHub is a high-fidelity experiment in <span className="text-white font-bold italic">Cinematic Technical Auditing</span>.
+                    </p>
+                    <p>
+                      Built using 100% Vibe Coding, this platform bypasses traditional logic in favor of pure intent and AI-driven narrative. Every roast is a unique, data-backed teardown of your technical existence.
+                    </p>
+                    <div className="pt-6 border-t border-zinc-900 grid grid-cols-2 gap-8">
+                       <div className="space-y-1">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Core_Engine</p>
+                          <p className="text-sm text-zinc-300 font-bold uppercase tracking-tighter italic">GPT-4o_Optimized</p>
+                       </div>
+                       <div className="space-y-1">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">UI_Framework</p>
+                          <p className="text-sm text-zinc-300 font-bold uppercase tracking-tighter italic">Framer_Motion_v11</p>
+                       </div>
+                    </div>
+                  </div>
                 </div>
-                <button onClick={() => setShowInfo(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                  <X size={24} className="text-zinc-500 hover:text-white" />
+                <button onClick={() => setShowInfo(false)} className="p-2 hover:bg-white/10 rounded-full transition-all group">
+                  <X size={24} className="text-zinc-500 group-hover:text-white group-hover:rotate-90 transition-all" />
                 </button>
               </div>
             </motion.div>
@@ -182,45 +198,51 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      <main className={`${roastData ? 'narrative-container' : 'max-w-2xl mx-auto px-6 h-screen flex flex-col justify-center'}`}>
+      <main className={`${roastData ? 'narrative-container' : 'max-w-4xl mx-auto px-6 h-screen flex flex-col justify-center overflow-hidden'}`}>
         {!roastMutation.isPending && !roastData && (
-          <div className="space-y-12 py-12">
+          <div className="space-y-12">
             <div className="flex justify-between items-start">
               <div className="space-y-2">
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[10px] uppercase tracking-[0.4em] text-muted font-black">Project_Core_V2</motion.p>
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-zinc-600 text-sm italic">Every repository tells a story. Most are tragedies.</motion.p>
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[10px] uppercase tracking-[0.6em] text-muted font-black">Project_Core_V2.5</motion.p>
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-zinc-600 text-sm italic leading-relaxed font-medium">Every repository tells a story. Most are tragedies.</motion.p>
               </div>
-              <motion.button initial={{ opacity: 0 }} animate={{ opacity: 0.3 }} whileHover={{ opacity: 1 }} onClick={() => setShowInfo(true)} className="p-1.5 border border-zinc-900 rounded-full hover:border-white transition-all"><Info size={14} /></motion.button>
+              <motion.button initial={{ opacity: 0 }} animate={{ opacity: 0.3 }} whileHover={{ opacity: 1 }} onClick={() => setShowInfo(true)} className="p-2 border border-zinc-900 rounded-full hover:border-white transition-all"><Info size={14} /></motion.button>
             </div>
 
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4 }}>
-              <div className="flex items-end gap-6 mb-2">
-                <h1 className="text-6xl md:text-8xl font-bold tracking-tighter text-white leading-[0.9]">
-                  {isBattleMode ? "Battle" : "Roast"} <br /> {isBattleMode ? "Arena" : "My GitHub"}<span className="text-zinc-900">.</span>
+            <div className="space-y-8">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}>
+                <h1 className="text-7xl md:text-[8.5rem] font-black tracking-tighter text-white leading-[0.85] uppercase italic">
+                  {isBattleMode ? "Dual" : "Roast"} <br /> {isBattleMode ? "Combat" : "GitHub"}<span className="text-zinc-900 not-italic">.</span>
                 </h1>
-              </div>
-            </motion.div>
+              </motion.div>
 
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="max-w-md">
-              <div className="flex gap-4 mb-12">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="flex gap-8 border-b border-zinc-900 pb-2 max-w-fit">
                 <button 
                   onClick={() => setIsBattleMode(false)}
-                  className={`text-[10px] font-black uppercase tracking-[0.2em] px-4 py-2 border transition-all ${!isBattleMode ? 'bg-white text-black border-white' : 'text-zinc-600 border-zinc-900 hover:border-zinc-700'}`}
-                >Solo_Judgment</button>
+                  className={`text-[10px] font-black uppercase tracking-[0.4em] transition-all relative ${!isBattleMode ? 'text-white' : 'text-zinc-700 hover:text-zinc-500'}`}
+                >
+                  Solo_Judgment
+                  {!isBattleMode && <motion.div layoutId="mode-underline" className="absolute -bottom-[11px] left-0 right-0 h-[2px] bg-white" />}
+                </button>
                 <button 
                   onClick={() => setIsBattleMode(true)}
-                  className={`text-[10px] font-black uppercase tracking-[0.2em] px-4 py-2 border transition-all ${isBattleMode ? 'bg-white text-black border-white' : 'text-zinc-600 border-zinc-900 hover:border-zinc-700'}`}
-                >Battle_Arena</button>
-              </div>
+                  className={`text-[10px] font-black uppercase tracking-[0.4em] transition-all relative ${isBattleMode ? 'text-white' : 'text-zinc-700 hover:text-zinc-500'}`}
+                >
+                  Dual_Combat
+                  {isBattleMode && <motion.div layoutId="mode-underline" className="absolute -bottom-[11px] left-0 right-0 h-[2px] bg-white" />}
+                </button>
+              </motion.div>
+            </div>
 
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="grid md:grid-cols-2 gap-16 items-start">
               <form onSubmit={handleRoast} className="space-y-8">
                 <div className="space-y-6">
-                  <div className="group">
-                    <p className="text-zinc-600 text-[10px] mb-3 font-black uppercase tracking-[0.3em]">{isBattleMode ? "Subject_01:" : "Identify_Subject:"}</p>
+                  <div className="group space-y-3">
+                    <p className="text-zinc-700 text-[10px] font-black uppercase tracking-[0.3em]">{isBattleMode ? "Subject_01:" : "Identify_Subject:"}</p>
                     <Input
                       type="text"
                       placeholder="username or owner/repo"
-                      className="bg-transparent border-0 border-b border-zinc-800 rounded-none h-12 text-2xl font-medium focus-visible:ring-0 focus-visible:border-white transition-all p-0 placeholder:text-zinc-900"
+                      className="bg-transparent border-0 border-b border-zinc-900 rounded-none h-12 text-2xl font-bold focus-visible:ring-0 focus-visible:border-white transition-all p-0 placeholder:text-zinc-900 text-white"
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       autoFocus
@@ -228,12 +250,12 @@ export default function Home() {
                   </div>
 
                   {isBattleMode && (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="group">
-                      <p className="text-zinc-600 text-[10px] mb-3 font-black uppercase tracking-[0.3em]">Subject_02:</p>
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="group space-y-3">
+                      <p className="text-zinc-700 text-[10px] font-black uppercase tracking-[0.3em]">Subject_02:</p>
                       <Input
                         type="text"
                         placeholder="username"
-                        className="bg-transparent border-0 border-b border-zinc-800 rounded-none h-12 text-2xl font-medium focus-visible:ring-0 focus-visible:border-white transition-all p-0 placeholder:text-zinc-900"
+                        className="bg-transparent border-0 border-b border-zinc-900 rounded-none h-12 text-2xl font-bold focus-visible:ring-0 focus-visible:border-white transition-all p-0 placeholder:text-zinc-900 text-white"
                         value={query2}
                         onChange={(e) => setQuery2(e.target.value)}
                       />
@@ -241,34 +263,46 @@ export default function Home() {
                   )}
                 </div>
 
-                <div className="space-y-4">
-                  <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">Select_Vibe:</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(Object.keys(VIBE_CONFIG) as RoastVibe[]).map((v) => (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => setVibe(v)}
-                        className={`text-left p-3 border transition-all ${
-                          vibe === v 
-                            ? "border-white bg-white text-black" 
-                            : "border-zinc-900 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300"
-                        }`}
-                      >
-                        <p className="text-[10px] font-black uppercase tracking-widest mb-1">{VIBE_CONFIG[v].label}</p>
-                        <p className="text-[9px] leading-tight opacity-70 font-medium">{VIBE_CONFIG[v].desc}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <button type="submit" className="text-[10px] uppercase tracking-[0.5em] font-black text-muted hover:text-white transition-colors flex items-center gap-4 group pt-4">
+                <button type="submit" className="text-[10px] uppercase tracking-[0.6em] font-black text-zinc-500 hover:text-white transition-all flex items-center gap-4 group pt-2">
                   <span>{isBattleMode ? "Start_Battle" : "Initiate_Judgment"}</span>
-                  <div className="w-12 h-[1px] bg-zinc-900 group-hover:w-20 group-hover:bg-white transition-all" />
+                  <div className="w-12 h-[1px] bg-zinc-900 group-hover:w-20 group-hover:bg-white transition-all duration-700" />
                 </button>
               </form>
-              {roastMutation.isError && <p className="mt-8 text-red-500 text-[10px] font-mono uppercase tracking-widest">Error: {(roastMutation.error as Error).message}</p>}
+
+              <div className="space-y-6">
+                <p className="text-zinc-700 text-[10px] font-black uppercase tracking-[0.3em]">Persona_Protocol:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(Object.keys(VIBE_CONFIG) as RoastVibe[]).map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setVibe(v)}
+                      className={`text-left p-4 border transition-all duration-500 group relative overflow-hidden ${
+                        vibe === v 
+                          ? "border-white/20 bg-white/5" 
+                          : "border-zinc-900 text-zinc-600 hover:border-zinc-800"
+                      }`}
+                    >
+                      {vibe === v && <motion.div layoutId="vibe-bg" className="absolute inset-0 bg-white/5 -z-10" />}
+                      <div className="flex justify-between items-center">
+                        <p className={`text-[10px] font-black uppercase tracking-widest transition-colors ${vibe === v ? 'text-white' : 'text-zinc-600 group-hover:text-zinc-400'}`}>
+                          {VIBE_CONFIG[v].label}
+                        </p>
+                      </div>
+                      <p className={`text-[9px] mt-1 leading-relaxed font-medium transition-colors ${vibe === v ? 'text-zinc-500' : 'text-zinc-800'}`}>
+                        {VIBE_CONFIG[v].desc}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </motion.div>
+
+            {roastMutation.isError && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-4 border border-red-950 bg-red-500/5 max-w-fit">
+                <p className="text-red-500 text-[9px] font-mono uppercase tracking-[0.3em] font-black">Error_Signal: {(roastMutation.error as Error).message}</p>
+              </motion.div>
+            )}
           </div>
         )}
 

@@ -261,18 +261,31 @@ export function RoastDisplay({
         </motion.div>
       )}
 
-      {/* Progressive Streaming Indicator */}
+      {/* Top System Status Line */}
       {isStreaming && !verdict && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="pt-[10vh] flex flex-col items-center justify-center text-center space-y-4"
-        >
-          <Loader2 className="animate-spin text-zinc-800" size={24} />
-          <p className="text-xs uppercase tracking-[0.4em] text-zinc-600 font-bold animate-pulse">
-            Analysis unfolding...
-          </p>
-        </motion.div>
+        <div className="fixed top-0 left-0 right-0 z-[100]">
+          <div className="h-[2px] w-full bg-zinc-900 overflow-hidden">
+            <motion.div 
+              initial={{ x: "-100%" }}
+              animate={{ x: "0%" }}
+              transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+              className="h-full w-full opacity-50"
+              style={{ backgroundColor: accentColor.includes('#') ? accentColor : `var(--color-${accentColor})` }}
+            />
+          </div>
+          <div className="flex justify-end p-4">
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center gap-3 px-3 py-1.5 bg-black/50 backdrop-blur-md border border-zinc-900 rounded-sm"
+            >
+              <Loader2 className="animate-spin text-zinc-600" size={10} />
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-500">
+                Analyzing_Data_Stream <span className="animate-pulse">...</span>
+              </span>
+            </motion.div>
+          </div>
+        </div>
       )}
 
       {/* Final Verdict: The Cinematic Conclusion */}
