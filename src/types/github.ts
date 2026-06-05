@@ -1,3 +1,5 @@
+export type RoastVibe = 'elitist' | 'brogrammer' | 'chaos' | 'recruiter';
+
 export interface GitHubUser {
   login: string;
   name: string | null;

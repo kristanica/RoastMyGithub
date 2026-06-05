@@ -1,8 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { GitHubUser } from "@/types/github";
-import { Share2, Loader2 } from "lucide-react";
+import { Share2, Loader2, Sparkles, ChevronDown } from "lucide-react";
 
 interface RoastDisplayProps {
   roast: any;
@@ -14,6 +15,7 @@ export function RoastDisplay({ roast, user, isStreaming }: RoastDisplayProps) {
   const introduction = roast?.introduction || "";
   const steps = roast?.steps || [];
   const verdict = roast?.verdict || "";
+  const [expandedRemedy, setExpandedRemedy] = useState<number | null>(null);
 
   const handleShare = () => {
     const text = `My GitHub profile was just judged: "${verdict || introduction}". Get roasted at RoastMyGitHub.`;
@@ -34,7 +36,7 @@ export function RoastDisplay({ roast, user, isStreaming }: RoastDisplayProps) {
           transition={{ duration: 1.5 }}
           className="min-h-[60vh] flex flex-col justify-center"
         >
-          <p className="text-4xl md:text-6xl font-bold leading-[1.1] tracking-tight text-white/90">
+          <p className="text-4xl md:text-6xl font-bold leading-[1.1] tracking-tight text-white/90 italic">
             {introduction}
           </p>
         </motion.div>
@@ -66,6 +68,31 @@ export function RoastDisplay({ roast, user, isStreaming }: RoastDisplayProps) {
                 <p className="text-xl md:text-2xl text-zinc-500 leading-relaxed max-w-3xl font-normal">
                   {step.insight}
                 </p>
+              )}
+
+              {step.remedy && (
+                <div className="pt-2">
+                  <button
+                    onClick={() => setExpandedRemedy(expandedRemedy === i ? null : i)}
+                    className="flex items-center gap-2 text-[9px] uppercase tracking-[0.2em] font-black text-zinc-700 hover:text-white transition-colors group"
+                  >
+                    <span>{expandedRemedy === i ? "Hide_Remedy" : "Seek_Remedy"}</span>
+                  </button>
+                  
+                  <AnimatePresence>
+                    {expandedRemedy === i && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                      >
+                        <p className="mt-4 text-sm md:text-base text-zinc-400 font-medium leading-relaxed max-w-2xl border-l border-zinc-800 pl-4 py-1">
+                          {step.remedy}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               )}
             </div>
           </motion.div>
