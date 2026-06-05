@@ -27,7 +27,7 @@ export default function Home() {
     mutationFn: async (targetQuery: string) => {
       setUser(null);
       setRoastData(null);
-      
+
       let msgIndex = 0;
       setLoadingStep(loadingMessages[0]);
       const msgInterval = setInterval(() => {
@@ -59,11 +59,11 @@ export default function Home() {
           if (done) break;
 
           const chunk = decoder.decode(value, { stream: true });
-          
+
           if (chunk.startsWith("USER_DATA:")) {
             const lines = chunk.split("\n");
             const userDataStr = lines[0].replace("USER_DATA:", "");
-            try { setUser(JSON.parse(userDataStr)); } catch (e) {}
+            try { setUser(JSON.parse(userDataStr)); } catch (e) { }
             accumulatedRaw += lines.slice(1).join("\n");
           } else {
             accumulatedRaw += chunk;
@@ -79,7 +79,7 @@ export default function Home() {
                 setRoastData((prev: any) => ({ ...prev, introduction: introMatch[1] }));
               }
             }
-          } catch (e) {}
+          } catch (e) { }
         }
       } finally {
         clearInterval(msgInterval);
@@ -115,7 +115,7 @@ export default function Home() {
                     <h2 className="text-2xl font-bold tracking-tighter uppercase italic">Vibe_Protocol_Activated</h2>
                   </div>
                   <p className="text-zinc-400 text-lg leading-relaxed">
-                    This website was built using <span className="text-white font-bold">100% Vibe Coding</span>. 
+                    This website was built using <span className="text-white font-bold">100% Vibe Coding</span>.
                     Zero manual logic, zero design specs—just pure intent.
                   </p>
                 </div>
@@ -128,7 +128,7 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      <main className={`${roastData ? 'narrative-container' : 'max-w-4xl mx-auto px-6 h-screen flex flex-col justify-center'}`}>
+      <main className={`${roastData ? 'narrative-container' : 'max-w-2xl mx-auto px-6 h-screen flex flex-col justify-center'}`}>
         {!roastMutation.isPending && !roastData && (
           <div className="space-y-12 py-12">
             <div className="flex justify-between items-start">

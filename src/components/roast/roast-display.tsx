@@ -114,7 +114,7 @@ export function RoastDisplay({ roast, user, isStreaming }: RoastDisplayProps) {
             transition={{ delay: 0.8, duration: 1.5, ease: "easeOut" }}
             className="text-center px-4"
           >
-            <p className="text-2xl md:text-8xl lg:text-[5rem] font-black tracking-tighter leading-[0.9] text-white italic uppercase break-words max-w-5xl mx-auto">
+            <p className="text-2xl md:text-5xl lg:text-[3.5rem] font-black tracking-tighter leading-[1.1] text-white italic uppercase break-words max-w-4xl mx-auto">
               {verdict}
               <span className="text-red-600 not-italic">.</span>
             </p>
