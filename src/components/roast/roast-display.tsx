@@ -15,7 +15,9 @@ export function RoastDisplay({ roast, user, isStreaming }: RoastDisplayProps) {
   const introduction = roast?.introduction || "";
   const steps = roast?.steps || [];
   const verdict = roast?.verdict || "";
-  const [expandedRemedy, setExpandedRemedy] = useState<number | null>(null);
+  const hireabilityScore = roast?.hireability_score;
+  const portfolioAudit = roast?.portfolio_audit;
+  const [expandedReceipt, setExpandedReceipt] = useState<number | null>(null);
 
   const handleShare = () => {
     const text = `My GitHub profile was just judged: "${verdict || introduction}". Get roasted at RoastMyGitHub.`;
@@ -34,11 +36,34 @@ export function RoastDisplay({ roast, user, isStreaming }: RoastDisplayProps) {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 1.5 }}
-          className="min-h-[60vh] flex flex-col justify-center"
+          className="min-h-[60vh] flex flex-col justify-center gap-12"
         >
           <p className="text-4xl md:text-6xl font-bold leading-[1.1] tracking-tight text-white/90 italic">
             {introduction}
           </p>
+
+          {hireabilityScore && (
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 1 }}
+              className="p-8 border border-zinc-900 bg-zinc-950/50 space-y-4 max-w-xl"
+            >
+              <div className="flex justify-between items-end">
+                <span className="text-[10px] uppercase tracking-[0.4em] font-black text-zinc-500">Hireability_Assessment</span>
+                <span className="text-4xl font-black text-white">{hireabilityScore}<span className="text-sm text-zinc-700">/100</span></span>
+              </div>
+              <div className="h-1 bg-zinc-900 w-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${hireabilityScore}%` }}
+                  transition={{ delay: 1.5, duration: 1 }}
+                  className="h-full bg-white"
+                />
+              </div>
+              {portfolioAudit && <p className="text-xs text-zinc-500 italic leading-relaxed">{portfolioAudit}</p>}
+            </motion.div>
+          )}
         </motion.div>
       )}
 
@@ -70,25 +95,25 @@ export function RoastDisplay({ roast, user, isStreaming }: RoastDisplayProps) {
                 </p>
               )}
 
-              {step.remedy && (
+              {step.receipt && (
                 <div className="pt-2">
                   <button
-                    onClick={() => setExpandedRemedy(expandedRemedy === i ? null : i)}
-                    className="flex items-center gap-2 text-[9px] uppercase tracking-[0.2em] font-black text-zinc-700 hover:text-white transition-colors group"
+                    onClick={() => setExpandedReceipt(expandedReceipt === i ? null : i)}
+                    className="flex items-center gap-2 text-[9px] uppercase tracking-[0.2em] font-black text-zinc-800 hover:text-white transition-colors"
                   >
-                    <span>{expandedRemedy === i ? "Hide_Remedy" : "Seek_Remedy"}</span>
+                    <span>{expandedReceipt === i ? "Hide_Evidence" : "Show_Evidence"}</span>
                   </button>
                   
                   <AnimatePresence>
-                    {expandedRemedy === i && (
+                    {expandedReceipt === i && (
                       <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -5 }}
+                        className="mt-4 p-4 bg-zinc-950 border border-zinc-900 font-mono text-[10px] text-zinc-500 max-w-lg"
                       >
-                        <p className="mt-4 text-sm md:text-base text-zinc-400 font-medium leading-relaxed max-w-2xl border-l border-zinc-800 pl-4 py-1">
-                          {step.remedy}
-                        </p>
+                        <span className="text-zinc-700 mr-2">SOURCE:</span>
+                        {step.receipt}
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -98,6 +123,33 @@ export function RoastDisplay({ roast, user, isStreaming }: RoastDisplayProps) {
           </motion.div>
         ))}
       </div>
+
+      {/* Summary Remedy: The Path to Redemption */}
+      {roast?.summary_remedy && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.5 }}
+          className="min-h-[40vh] flex flex-col justify-center space-y-12"
+        >
+          <div className="flex items-center gap-6">
+            <span className="text-[10px] uppercase tracking-[0.6em] text-zinc-600 font-black">
+              The Path To Redemption
+            </span>
+            <div className="h-[1px] flex-1 bg-zinc-900" />
+          </div>
+          
+          <div className="space-y-6">
+            <p className="text-2xl md:text-4xl text-white font-medium leading-relaxed max-w-4xl italic">
+              "{roast.summary_remedy}"
+            </p>
+            <p className="text-sm text-zinc-600 uppercase tracking-widest font-bold">
+              — Suggested_Course_Of_Action
+            </p>
+          </div>
+        </motion.div>
+      )}
 
       {/* Progressive Streaming Indicator */}
       {isStreaming && !verdict && (

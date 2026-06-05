@@ -18,13 +18,17 @@ export class AIService {
     const reposSummary = repos.slice(0, 10).map(r => r.name + " (" + r.stargazers_count + " stars)").join(', ');
     const languages = Array.from(new Set(repos.map(r => r.language).filter(Boolean))).join(', ');
     
+    const extraMetrics = vibe === 'recruiter' 
+      ? `,"hireability_score": "A number from 0-100", "portfolio_audit": "A 1-sentence professional summary of their technical presence."`
+      : "";
+
     const prompt = `
       ${persona}
       Write an interactive editorial essay about this developer's GitHub profile.
       
       Structure your response as a sequential narrative reveal. 
       Each "step" should be a single clear idea.
-      For each step, provide a "remedy" which is a genuine, helpful 1-sentence tip to fix or improve the issue mentioned.
+      For each step, provide a "receipt" which is a specific piece of evidence from the GitHub data (e.g., a specific repo name, follower count, or language stat).
       
       Output ONLY a valid JSON object matching this schema:
       {
@@ -34,10 +38,12 @@ export class AIService {
             "title": "A short descriptive header for this observation",
             "content": "The roast line: concise, observational, analytical.",
             "insight": "A brief technical justification or evidence.",
-            "remedy": "A genuine 1-sentence tip to fix this issue."
+            "receipt": "The specific evidence from the data."
           }
         ],
+        "summary_remedy": "A concise 2-3 sentence technical summary on how the developer can redeem their entire profile.",
         "verdict": "A short, memorable final judgment."
+        ${extraMetrics}
       }
 
       GitHub Data:
@@ -67,8 +73,7 @@ export class AIService {
     const prompt = `
       ${persona}
       Write an interactive essay roast for the repository "${repo.name}".
-      Provide a "remedy" for each step which is a genuine, helpful 1-sentence tip to fix the issue.
-
+      
       Output ONLY valid JSON:
       {
         "introduction": "1-sentence hook",
@@ -77,9 +82,10 @@ export class AIService {
             "title": string, 
             "content": string, 
             "insight": string,
-            "remedy": "A genuine 1-sentence tip to fix this issue."
+            "receipt": "Specific evidence from the README or repository metadata."
           }
         ],
+        "summary_remedy": "A 2-sentence summary on how to fix this specific repository.",
         "verdict": "Final short judgment"
       }
       Data: ${repo.language}, ${repo.stargazers_count} stars. README: ${readme ? readme.substring(0, 500) : "None"}
@@ -89,6 +95,54 @@ export class AIService {
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: "You are an analytical storyteller. Output ONLY valid JSON." },
+        { role: "user", content: prompt }
+      ],
+      response_format: { type: "json_object" },
+      stream: true,
+    });
+  }
+
+  static async streamBattleRoast(user1: { user: GitHubUser, repos: GitHubRepository[] }, user2: { user: GitHubUser, repos: GitHubRepository[] }, vibe: RoastVibe = 'elitist') {
+    const persona = VIBE_PROMPTS[vibe];
+    const u1Repos = user1.repos.slice(0, 5).map(r => r.name).join(', ');
+    const u2Repos = user2.repos.slice(0, 5).map(r => r.name).join(', ');
+
+    const prompt = `
+      ${persona}
+      You are hosting a technical battle between two developers: ${user1.user.login} vs ${user2.user.login}.
+      Compare their technical lives, choices, and profiles. Be analytical, comparative, and humorous.
+
+      Output ONLY a valid JSON object matching this schema:
+      {
+        "introduction": "A cinematic setup for the battle.",
+        "rounds": [
+          {
+            "title": "Round title (e.g., 'Documentation Wars', 'Architectural Chaos')",
+            "analysis": "Comparative analysis of both developers.",
+            "winner_of_round": "username of the winner of this specific round or 'Draw'"
+          }
+        ],
+        "verdict": "A final brutal summary of the battle.",
+        "overall_winner": "username of the ultimate winner"
+      }
+
+      Developer 01 (${user1.user.login}):
+      - Bio: ${user1.user.bio}
+      - Repos: ${u1Repos}
+      - Languages: ${Array.from(new Set(user1.repos.map(r => r.language).filter(Boolean))).join(', ')}
+
+      Developer 02 (${user2.user.login}):
+      - Bio: ${user2.user.bio}
+      - Repos: ${u2Repos}
+      - Languages: ${Array.from(new Set(user2.repos.map(r => r.language).filter(Boolean))).join(', ')}
+
+      Declare a technical champion.
+    `;
+
+    return openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are an analytical combat commentator. Output ONLY valid JSON." },
         { role: "user", content: prompt }
       ],
       response_format: { type: "json_object" },
