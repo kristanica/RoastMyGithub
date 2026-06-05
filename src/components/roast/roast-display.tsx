@@ -2,20 +2,21 @@
 
 import { motion } from "framer-motion";
 import { GitHubUser } from "@/types/github";
-import { Share2 } from "lucide-react";
+import { Share2, Loader2 } from "lucide-react";
 
 interface RoastDisplayProps {
   roast: any;
   user?: GitHubUser;
+  isStreaming?: boolean;
 }
 
-export function RoastDisplay({ roast, user }: RoastDisplayProps) {
+export function RoastDisplay({ roast, user, isStreaming }: RoastDisplayProps) {
   const introduction = roast?.introduction || "";
   const steps = roast?.steps || [];
   const verdict = roast?.verdict || "";
 
   const handleShare = () => {
-    const text = `My GitHub profile was just judged: "${verdict}". Get roasted at RoastMyGitHub.`;
+    const text = `My GitHub profile was just judged: "${verdict || introduction}". Get roasted at RoastMyGitHub.`;
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`,
       "_blank",
@@ -23,7 +24,7 @@ export function RoastDisplay({ roast, user }: RoastDisplayProps) {
   };
 
   return (
-    <div className="space-y-64 pb-64">
+    <div className="space-y-[30vh] pb-[20vh]">
       {/* Introduction: The Hook */}
       {introduction && (
         <motion.div
@@ -31,7 +32,7 @@ export function RoastDisplay({ roast, user }: RoastDisplayProps) {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 1.5 }}
-          className="min-h-[40vh] flex flex-col justify-center"
+          className="min-h-[60vh] flex flex-col justify-center"
         >
           <p className="text-4xl md:text-6xl font-bold leading-[1.1] tracking-tight text-white/90">
             {introduction}
@@ -40,13 +41,13 @@ export function RoastDisplay({ roast, user }: RoastDisplayProps) {
       )}
 
       {/* Narrative Steps: The Analysis */}
-      <div className="space-y-64">
+      <div className="space-y-[40vh]">
         {steps.map((step: any, i: number) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-20%" }}
+            viewport={{ once: true, margin: "-10%" }}
             transition={{ duration: 1.2, ease: [0.215, 0.61, 0.355, 1] }}
             className="space-y-12"
           >
@@ -62,7 +63,7 @@ export function RoastDisplay({ roast, user }: RoastDisplayProps) {
                 {step.content}
               </h3>
               {step.insight && (
-                <p className="text-xl md:text-2xl text-zinc-500 leading-relaxed max-w-2xl font-normal">
+                <p className="text-xl md:text-2xl text-zinc-500 leading-relaxed max-w-3xl font-normal">
                   {step.insight}
                 </p>
               )}
@@ -70,6 +71,20 @@ export function RoastDisplay({ roast, user }: RoastDisplayProps) {
           </motion.div>
         ))}
       </div>
+
+      {/* Progressive Streaming Indicator */}
+      {isStreaming && !verdict && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="pt-[10vh] flex flex-col items-center justify-center text-center space-y-4"
+        >
+          <Loader2 className="animate-spin text-zinc-800" size={24} />
+          <p className="text-xs uppercase tracking-[0.4em] text-zinc-600 font-bold animate-pulse">
+            Analysis unfolding...
+          </p>
+        </motion.div>
+      )}
 
       {/* Final Verdict: The Cinematic Conclusion */}
       {verdict && (
