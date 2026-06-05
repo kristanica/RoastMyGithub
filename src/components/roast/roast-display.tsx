@@ -7,6 +7,8 @@ import { Share2, Loader2, Sparkles, ChevronDown, Download } from "lucide-react";
 import { toPng } from "html-to-image";
 import { ReportCard } from "./report-card";
 
+import { WrappedDisplay } from "./wrapped-display";
+
 interface RoastDisplayProps {
   roast: any;
   user?: GitHubUser;
@@ -18,11 +20,22 @@ export function RoastDisplay({ roast, user, isStreaming, vibe = "elitist" }: Roa
   const introduction = roast?.introduction || "";
   const steps = roast?.steps || [];
   const verdict = roast?.verdict || "";
+  const dnaTraits = roast?.dna_traits || [];
   const hireabilityScore = roast?.hireability_score;
   const portfolioAudit = roast?.portfolio_audit;
   const [expandedReceipt, setExpandedReceipt] = useState<number | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [showWrapped, setShowWrapped] = useState(false);
   const reportCardRef = useRef<HTMLDivElement>(null);
+
+  const themeColors: Record<string, string> = {
+    elitist: "zinc-100",
+    brogrammer: "blue-400",
+    chaos: "red-500",
+    recruiter: "blue-600",
+  };
+
+  const accentColor = themeColors[vibe] || themeColors.elitist;
 
   const handleDownload = async () => {
     if (!reportCardRef.current || isDownloading) return;
@@ -156,6 +169,43 @@ export function RoastDisplay({ roast, user, isStreaming, vibe = "elitist" }: Roa
         ))}
       </div>
 
+      {/* DNA Traits Section */}
+      {dnaTraits.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="min-h-[40vh] flex flex-col justify-center space-y-16"
+        >
+          <div className="flex items-center gap-6">
+            <span className={`text-[10px] uppercase tracking-[0.6em] text-${accentColor} font-black`}>
+              Technical_DNA
+            </span>
+            <div className={`h-[1px] flex-1 bg-zinc-900`} />
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-12">
+            {dnaTraits.map((trait: any, i: number) => (
+              <div key={i} className="space-y-6">
+                <div className="flex justify-between items-end">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{trait.name}</p>
+                  <p className={`text-xl font-black italic text-${accentColor}`}>{trait.value}%</p>
+                </div>
+                <div className="h-1 w-full bg-zinc-900 relative overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    whileInView={{ width: `${trait.value}%` }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.5, duration: 1.5, ease: "easeOut" }}
+                    className={`absolute inset-y-0 left-0 bg-${accentColor}`}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
       {/* Summary Remedy: The Path to Redemption */}
       {roast?.summary_remedy && (
         <motion.div
@@ -169,7 +219,7 @@ export function RoastDisplay({ roast, user, isStreaming, vibe = "elitist" }: Roa
             <span className="text-[10px] uppercase tracking-[0.6em] text-zinc-600 font-black">
               The Path To Redemption
             </span>
-            <div className="h-[1px] flex-1 bg-zinc-900" />
+            <div className={`h-[1px] flex-1 bg-zinc-900`} />
           </div>
           
           <div className="space-y-6">
@@ -236,23 +286,42 @@ export function RoastDisplay({ roast, user, isStreaming, vibe = "elitist" }: Roa
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 2, duration: 1 }}
-            className="mt-24"
+            className="mt-24 flex flex-col items-center gap-12"
           >
+            <button
+              onClick={() => setShowWrapped(true)}
+              className="group flex flex-col items-center gap-4 text-muted hover:text-white transition-all duration-500"
+            >
+              <div className="p-4 rounded-full border border-zinc-800 group-hover:border-white transition-colors bg-white/5 animate-pulse group-hover:animate-none">
+                <Share2 size={24} />
+              </div>
+              <span className="text-[10px] uppercase tracking-[0.4em] font-black">
+                Reveal_My_Story
+              </span>
+            </button>
+
             <button
               onClick={handleDownload}
               disabled={isDownloading}
-              className="group flex flex-col items-center gap-4 text-muted hover:text-white transition-all duration-500 disabled:opacity-50"
+              className="group flex items-center gap-3 text-[9px] uppercase tracking-[0.2em] font-black text-zinc-600 hover:text-white transition-all disabled:opacity-50"
             >
-              <div className="p-4 rounded-full border border-zinc-800 group-hover:border-white transition-colors">
-                {isDownloading ? <Loader2 className="animate-spin" size={24} /> : <Download size={24} />}
-              </div>
-              <span className="text-[10px] uppercase tracking-[0.4em] font-black">
-                {isDownloading ? "Generating_Asset..." : "Download_Report_Card"}
-              </span>
+              {isDownloading ? <Loader2 className="animate-spin" size={14} /> : <Download size={14} />}
+              <span>{isDownloading ? "Generating_Asset..." : "Download_Audit_Card"}</span>
             </button>
           </motion.div>
         </motion.div>
       )}
+
+      <AnimatePresence>
+        {showWrapped && (
+          <WrappedDisplay 
+            user={user} 
+            roast={roast} 
+            vibe={vibe} 
+            onClose={() => setShowWrapped(false)} 
+          />
+        )}
+      </AnimatePresence>
 
       {/* Off-screen Report Card for Image Generation */}
       <ReportCard ref={reportCardRef} user={user} roast={roast} vibe={vibe} />

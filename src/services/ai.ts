@@ -41,6 +41,17 @@ export class AIService {
             "receipt": "The specific evidence from the data."
           }
         ],
+        "dna_traits": [
+          { "name": "Humorous stat name (e.g., 'Audacity')", "value": "Number from 0-100" },
+          { "name": "Humorous stat name (e.g., 'Spaghetti_Index')", "value": "Number from 0-100" },
+          { "name": "Humorous stat name (e.g., 'Logic_Void')", "value": "Number from 0-100" }
+        ],
+        "wrapped": {
+          "spirit_language": { "name": "Language Name", "reason": "1-sentence humorous reason" },
+          "worst_habit": { "name": "Habit Name", "description": "1-sentence funny description" },
+          "best_moment": { "name": "Best technical choice/repo", "description": "1-sentence justification" },
+          "coding_persona": { "title": "A short humorous title (e.g., 'The 3AM Chaos Architect')", "description": "1-sentence summary of their vibe" }
+        },
         "summary_remedy": "A concise 2-3 sentence technical summary on how the developer can redeem their entire profile.",
         "grade": "S, A, B, C, D, or F based on technical quality",
         "verdict": "A short, memorable final judgment."
@@ -55,7 +66,7 @@ export class AIService {
       - Languages: ${languages}
       - Repos Summary: ${reposSummary}
 
-      Write the story of this developer's technical life.
+      Write the story of this developer's technical life. Include a "wrapped" summary for an end-of-year style reveal.
     `;
 
     return openai.chat.completions.create({
@@ -85,6 +96,11 @@ export class AIService {
             "insight": string,
             "receipt": "Specific evidence from the README or repository metadata."
           }
+        ],
+        "dna_traits": [
+          { "name": "Humorous stat name", "value": "0-100" },
+          { "name": "Humorous stat name", "value": "0-100" },
+          { "name": "Humorous stat name", "value": "0-100" }
         ],
         "summary_remedy": "A 2-sentence summary on how to fix this specific repository.",
         "grade": "S, A, B, C, D, or F based on technical quality",
