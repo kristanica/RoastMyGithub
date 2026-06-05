@@ -175,16 +175,15 @@ export default function Home() {
       <AnimatePresence>
         {showInfo && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-6 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-xl w-full p-12 space-y-10 border border-white/10 bg-black">
+            <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.98 }} className="max-w-lg w-full p-8 border border-white/10 bg-black space-y-8">
               <div className="flex justify-between items-start">
-                <div className="space-y-8">
-                  <h2 className="text-3xl font-bold tracking-tight italic">What is this?</h2>
-                  <div className="space-y-6 text-zinc-400 text-lg leading-relaxed">
-                    <p>Most GitHub profiles are forgettable. Some are abandoned graveyards of unfinished ideas. Some contain twelve frameworks and a dream.</p>
-                    <p>Yours is probably one of them. We're just here to tell you the truth.</p>
-                  </div>
-                </div>
-                <button onClick={() => setShowInfo(false)} className="p-2 text-zinc-600 hover:text-white transition-colors"><X size={24} /></button>
+                <p className="text-[10px] uppercase tracking-[0.4em] text-zinc-600 font-black">Information</p>
+                <button onClick={() => setShowInfo(false)} className="text-zinc-600 hover:text-white transition-colors"><X size={18} /></button>
+              </div>
+              
+              <div className="space-y-6 text-zinc-400 text-sm leading-relaxed font-medium">
+                <p>This is a <span className="text-white font-bold">vibe-coded</span> experiment built for speed and sarcasm. Some things might break, and the logic might be unhinged. That's by design.</p>
+                <p>Most GitHub profiles are abandoned graveyards of unfinished ideas. We're just here to provide the autopsy.</p>
               </div>
             </motion.div>
           </motion.div>
@@ -195,7 +194,7 @@ export default function Home() {
         {!roastMutation.isPending && !roastData && (
           <div className="space-y-[4vh] max-w-5xl">
             <header className="flex justify-between items-center">
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 0.4 }} className="text-[10px] uppercase tracking-[0.6em] font-black italic">Performance Review v2.5</motion.p>
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 0.4 }} className="text-[10px] uppercase tracking-[0.6em] font-black italic">Legacy Code Autopsy</motion.p>
               <button onClick={() => setShowInfo(true)} className="text-[10px] uppercase tracking-[0.4em] text-zinc-600 hover:text-white transition-colors font-bold">The Reality</button>
             </header>
 
