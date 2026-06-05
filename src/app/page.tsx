@@ -240,7 +240,12 @@ export default function Home() {
             </div>
 
             <div className="space-y-8">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}>
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                className="h-[14rem] md:h-[16rem] flex flex-col justify-end" // Fixed height for header area
+              >
                 <h1 className="text-7xl md:text-[8.5rem] font-black tracking-tighter text-white leading-[0.85] uppercase italic">
                   {mode === "battle" ? "Dual" : mode === "panel" ? "Panel" : "Roast"} <br /> {mode === "battle" ? "Combat" : mode === "panel" ? "Hearing" : "GitHub"}<span className="text-zinc-900 not-italic">.</span>
                 </h1>
@@ -271,9 +276,9 @@ export default function Home() {
               </motion.div>
             </div>
 
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="grid md:grid-cols-2 gap-16 items-start text-white">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="grid md:grid-cols-2 gap-16 items-start text-white min-h-[320px]">
               <form onSubmit={handleRoast} className="space-y-8">
-                <div className="space-y-6">
+                <div className="space-y-6 min-h-[160px] flex flex-col justify-start"> {/* Min-height for inputs */}
                   <div className="group space-y-3">
                     <p className="text-zinc-700 text-[10px] font-black uppercase tracking-[0.3em]">{mode === "battle" ? "Subject_01:" : "Identify_Subject:"}</p>
                     <Input
@@ -287,7 +292,7 @@ export default function Home() {
                   </div>
 
                   {mode === "battle" && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="group space-y-3">
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="group space-y-3 pt-4">
                       <p className="text-zinc-700 text-[10px] font-black uppercase tracking-[0.3em]">Subject_02:</p>
                       <Input
                         type="text"
@@ -308,7 +313,7 @@ export default function Home() {
 
               <div className="space-y-6">
                 <p className="text-zinc-700 text-[10px] font-black uppercase tracking-[0.3em]">Persona_Protocol:</p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 min-h-[160px]"> {/* Min-height for persona area */}
                   {(Object.keys(VIBE_CONFIG) as RoastVibe[]).map((v) => (
                     <button
                       key={v}
@@ -333,7 +338,7 @@ export default function Home() {
                     </button>
                   ))}
                   {mode === "panel" && (
-                     <div className="col-span-2 p-4 border border-white/10 bg-white/5 rounded-sm">
+                     <div className="col-span-2 p-4 border border-white/10 bg-white/5 rounded-sm h-fit">
                         <p className="text-[10px] font-black uppercase tracking-widest text-white mb-2">Panel_Mode_Active</p>
                         <p className="text-[9px] text-zinc-500 leading-relaxed">All judges will be present. Selection protocol bypassed.</p>
                      </div>
