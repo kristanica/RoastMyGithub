@@ -5,12 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { RoastDisplay } from "@/components/roast/roast-display";
 import { GitHubUser } from "@/types/github";
-import { Info, X, Zap } from "lucide-react";
+import { Info, X, Zap, Loader2 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 
 export default function Home() {
   const [query, setQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<GitHubUser | null>(null);
   const [roastData, setRoastData] = useState<any>(null);
   const [loadingStep, setLoadingStep] = useState("");
@@ -24,74 +23,75 @@ export default function Home() {
     "Questioning life choices...",
   ];
 
-  const handleRoast = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query) return;
+  const roastMutation = useMutation({
+    mutationFn: async (targetQuery: string) => {
+      setUser(null);
+      setRoastData(null);
+      
+      // Cycle through loading messages
+      let msgIndex = 0;
+      setLoadingStep(loadingMessages[0]);
+      const msgInterval = setInterval(() => {
+        msgIndex = (msgIndex + 1) % loadingMessages.length;
+        setLoadingStep(loadingMessages[msgIndex]);
+      }, 2500);
 
-    setIsLoading(true);
-    setError(null);
-    setUser(null);
-    setRoastData(null);
-    
-    let msgIndex = 0;
-    setLoadingStep(loadingMessages[0]);
-    const msgInterval = setInterval(() => {
-      msgIndex = (msgIndex + 1) % loadingMessages.length;
-      setLoadingStep(loadingMessages[msgIndex]);
-    }, 2500);
-
-    try {
-      let url = `/api/roast?username=${query}`;
-      if (query.includes("/")) {
-        const [username, repo] = query.split("/");
-        url = `/api/roast?username=${username}&repo=${repo}`;
-      }
-
-      const response = await fetch(url);
-      if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.error || "Failed to fetch roast");
-      }
-
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error("ReadableStream not supported");
-
-      const decoder = new TextDecoder();
-      let accumulatedRaw = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        
-        if (chunk.startsWith("USER_DATA:")) {
-          const lines = chunk.split("\n");
-          const userDataStr = lines[0].replace("USER_DATA:", "");
-          try { setUser(JSON.parse(userDataStr)); } catch (e) {}
-          accumulatedRaw += lines.slice(1).join("\n");
-        } else {
-          accumulatedRaw += chunk;
+      try {
+        let url = `/api/roast?username=${targetQuery}`;
+        if (targetQuery.includes("/")) {
+          const [username, repo] = targetQuery.split("/");
+          url = `/api/roast?username=${username}&repo=${repo}`;
         }
 
-        try {
-          if (accumulatedRaw.trim().endsWith("}")) {
-            const data = JSON.parse(accumulatedRaw);
-            setRoastData(data);
+        const response = await fetch(url);
+        if (!response.ok) {
+          const result = await response.json();
+          throw new Error(result.error || "Failed to fetch roast");
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error("ReadableStream not supported");
+
+        const decoder = new TextDecoder();
+        let accumulatedRaw = "";
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          
+          if (chunk.startsWith("USER_DATA:")) {
+            const lines = chunk.split("\n");
+            const userDataStr = lines[0].replace("USER_DATA:", "");
+            try { setUser(JSON.parse(userDataStr)); } catch (e) {}
+            accumulatedRaw += lines.slice(1).join("\n");
           } else {
-            const introMatch = accumulatedRaw.match(/"introduction":\s*"([^"]*)"?/);
-            if (introMatch) {
-              setRoastData((prev: any) => ({ ...prev, introduction: introMatch[1] }));
-            }
+            accumulatedRaw += chunk;
           }
-        } catch (e) {}
+
+          try {
+            if (accumulatedRaw.trim().endsWith("}")) {
+              const data = JSON.parse(accumulatedRaw);
+              setRoastData(data);
+            } else {
+              const introMatch = accumulatedRaw.match(/"introduction":\s*"([^"]*)"?/);
+              if (introMatch) {
+                setRoastData((prev: any) => ({ ...prev, introduction: introMatch[1] }));
+              }
+            }
+          } catch (e) {}
+        }
+      } finally {
+        clearInterval(msgInterval);
       }
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      clearInterval(msgInterval);
-      setIsLoading(false);
     }
+  });
+
+  const handleRoast = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query || roastMutation.isPending) return;
+    roastMutation.mutate(query);
   };
 
   return (
@@ -147,9 +147,8 @@ export default function Home() {
 
       <main className="narrative-container">
         {/* Scenario 1: The Cinematic Entry */}
-        {!isLoading && !roastData && (
+        {!roastMutation.isPending && !roastData && (
           <div className="min-h-[80vh] flex flex-col justify-center">
-            {/* The Prologue */}
             <div className="flex justify-between items-start mb-12">
               <div className="space-y-2">
                 <motion.p 
@@ -181,7 +180,6 @@ export default function Home() {
               </motion.button>
             </div>
 
-            {/* The Statement Heading */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -193,7 +191,6 @@ export default function Home() {
               </h1>
             </motion.div>
 
-            {/* The Conversational Input */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -222,13 +219,13 @@ export default function Home() {
                   </button>
                 </div>
               </form>
-              {error && (
+              {roastMutation.isError && (
                 <motion.p 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="mt-12 text-red-500 text-xs font-mono uppercase tracking-widest"
                 >
-                  Analysis_Error: {error}
+                  Analysis_Error: {(roastMutation.error as Error).message}
                 </motion.p>
               )}
             </motion.div>
@@ -236,7 +233,7 @@ export default function Home() {
         )}
 
         {/* Scenario 2: The Narrative Pause (Loading) */}
-        {isLoading && !roastData?.introduction && (
+        {roastMutation.isPending && !roastData?.introduction && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -272,7 +269,7 @@ export default function Home() {
             <RoastDisplay roast={roastData} user={user || undefined} />
             
             {/* The End Scene */}
-            {!isLoading && (
+            {!roastMutation.isPending && (
               <motion.div
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
@@ -280,7 +277,7 @@ export default function Home() {
                 className="pt-48 pb-32 text-center"
               >
                 <button
-                  onClick={() => { setRoastData(null); setUser(null); setQuery(""); }}
+                  onClick={() => { setRoastData(null); setUser(null); setQuery(""); roastMutation.reset(); }}
                   className="text-[10px] uppercase tracking-[0.5em] font-black text-muted hover:text-white transition-colors border-b border-transparent hover:border-white pb-2"
                 >
                   Analyze another repository
