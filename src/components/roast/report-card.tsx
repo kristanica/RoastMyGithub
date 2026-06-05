@@ -38,7 +38,7 @@ export const ReportCard = forwardRef<HTMLDivElement, ReportCardProps>(
           <div className="space-y-8">
              <h2 className="text-4xl font-bold tracking-tighter uppercase italic leading-none">Judgment.</h2>
              <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600">Performance Review v2.5</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-600">Legacy Code Autopsy</span>
                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400 italic">Audited by {theme.label}</span>
              </div>
           </div>
