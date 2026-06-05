@@ -59,31 +59,28 @@ export class GitHubService {
 
   static async getRecentCommits(username: string): Promise<string[]> {
     try {
-      const response = await fetch(`${GITHUB_API_URL}/users/${username}/events/public`, {
-        headers: {
-          "Accept": "application/vnd.github.v3+json",
-          ...this.getAuthHeader(),
-        },
-      });
-
-      if (!response.ok) return [];
-      const events = await response.json();
+      console.log(`[DEBUG] Scraping direct commits for: ${username}`);
       
-      const commitMessages: string[] = [];
-      for (const event of events) {
-        if (event.type === "PushEvent" && event.payload.commits) {
-          for (const commit of event.payload.commits) {
-            if (commit.message && !commit.message.startsWith("Merge ")) {
-              commitMessages.push(commit.message);
-            }
-          }
-        }
-        if (commitMessages.length >= 15) break;
+      // Step 1: Get recently updated public repos
+      const repos = await this.getUserRepositories(username);
+      const topRepos = repos.slice(0, 3); // Check the top 3 most recently updated
+      
+      const allCommits: string[] = [];
+      
+      // Step 2: Fetch commits directly from those repos in parallel
+      const repoCommits = await Promise.all(
+        topRepos.map(repo => this.getRepositoryCommits(username, repo.name))
+      );
+      
+      for (const commits of repoCommits) {
+        allCommits.push(...commits);
       }
       
-      return commitMessages.slice(0, 10);
+      console.log(`[DEBUG] Direct scraping found ${allCommits.length} commits across ${topRepos.length} repos`);
+      
+      return allCommits.slice(0, 10);
     } catch (error) {
-      console.error("Error fetching commits:", error);
+      console.error("[DEBUG] Error scraping commits:", error);
       return [];
     }
   }

@@ -65,6 +65,9 @@ export function WrappedDisplay({ user, roast, vibe, onClose }: WrappedDisplayPro
     }
   ];
 
+  // Animation duration for each slide in seconds
+  const DURATION = 6;
+
   const nextSlide = () => {
     if (currentSlide < slides.length - 1) {
       setCurrentSlide(currentSlide + 1);
@@ -80,7 +83,7 @@ export function WrappedDisplay({ user, roast, vibe, onClose }: WrappedDisplayPro
   };
 
   useEffect(() => {
-    const timer = setTimeout(nextSlide, 6000);
+    const timer = setTimeout(nextSlide, DURATION * 1000);
     return () => clearTimeout(timer);
   }, [currentSlide]);
 
@@ -89,7 +92,7 @@ export function WrappedDisplay({ user, roast, vibe, onClose }: WrappedDisplayPro
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className={`fixed inset-0 z-[100] bg-black bg-gradient-to-br ${currentTheme} flex flex-col items-center justify-between p-8 md:p-16 overflow-hidden`}
+      className={`fixed top-0 left-0 right-0 bottom-0 w-screen h-screen z-[9999] bg-black bg-gradient-to-br ${currentTheme} flex flex-col items-center justify-between p-8 md:p-16 overflow-hidden`}
     >
       {/* Background Decorative Elements */}
       <div className="absolute inset-0 opacity-10 pointer-events-none">
@@ -98,13 +101,18 @@ export function WrappedDisplay({ user, roast, vibe, onClose }: WrappedDisplayPro
       </div>
 
       {/* Progress Bars */}
-      <div className="absolute top-10 left-8 right-8 flex gap-2 z-50">
+      <div className="absolute top-10 left-8 right-8 flex gap-2 z-[10000]">
         {slides.map((_, i) => (
           <div key={i} className="h-[2px] flex-1 bg-white/10 rounded-full overflow-hidden">
             <motion.div 
-              initial={{ width: 0 }}
-              animate={{ width: i === currentSlide ? "100%" : i < currentSlide ? "100%" : "0%" }}
-              transition={{ duration: i === currentSlide ? 6 : 0, ease: "linear" }}
+              initial={{ width: "0%" }}
+              animate={{ 
+                width: i === currentSlide ? "100%" : i < currentSlide ? "100%" : "0%" 
+              }}
+              transition={{ 
+                duration: i === currentSlide ? DURATION : 0, 
+                ease: "linear" 
+              }}
               className="h-full"
               style={{ backgroundColor: accent }}
             />
