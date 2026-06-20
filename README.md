@@ -4,7 +4,6 @@
 
 RoastMyGitHub is a minimal interactive storytelling experience that analyzes GitHub profiles and repositories to deliver structured, analytical, and brutally honest "roast narratives." Inspired by data-driven interactive essays like *The Pudding*, it prioritizes content, pacing, and editorial storytelling over traditional dashboard interfaces.
 
-This project is **100% Vibe Coded** — built with pure intent, natural language, and a slightly unhinged AI agent.
 
 ---
 
@@ -69,11 +68,7 @@ RoastMyGitHub is a testament to the power of **Vibe Coding**. It was developed w
 - **Aesthetic by consensus**
 - **Intuitive iteration**
 
-If the vibes are off, the code is wrong.
 
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
