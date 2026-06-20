@@ -61,12 +61,7 @@ RoastMyGitHub is a minimal interactive storytelling experience that analyzes Git
 5.  **Open the experience**:
     Visit [http://localhost:3000](http://localhost:3000) and prepare for judgment.
 
-## 🧠 Philosophy: Vibe Coding
 
-RoastMyGitHub is a testament to the power of **Vibe Coding**. It was developed without traditional design specs or rigid logic maps. Instead, it was guided by:
-- **Prompt-driven architecture**
-- **Aesthetic by consensus**
-- **Intuitive iteration**
 
 
 
