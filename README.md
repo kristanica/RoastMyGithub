@@ -18,9 +18,9 @@ RoastMyGitHub is a minimal interactive storytelling experience that analyzes Git
 ## 🛠️ Tech Stack
 
 - **Framework**: Next.js 16 (App Router)
-- **Runtime**: React 19
-- **AI**: OpenAI GPT-4o-mini (Real-time Streaming)
-- **Styling**: Tailwind CSS v4 (Pure Editorial Minimalism)
+
+- **AI**: OpenAI GPT-4o-mini 
+- **Styling**: Tailwind CSS v4 
 - **Animation**: Framer Motion
 - **Icons**: Lucide React
 - **Language**: TypeScript
@@ -31,7 +31,7 @@ RoastMyGitHub is a minimal interactive storytelling experience that analyzes Git
 
 - Node.js 18.x or later
 - An OpenAI API Key
-- (Optional) A GitHub Personal Access Token (for higher rate limits)
+
 
 ### Installation
 
