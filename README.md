@@ -10,7 +10,6 @@ RoastMyGitHub is a minimal interactive storytelling experience that analyzes Git
 ## ✨ Features
 
 - **Cinematic Narrative Entry**: A high-fidelity, statement-driven landing page that sets the stage for technical humiliation.
-- **Diagnostic Data Stream**: Real-time streaming of AI-generated insights, revealed sequentially like a digital editorial.
 - **Analytical Storytelling**: Sophisticated AI voice that provides observational, accurate, and humorous critiques based on real repository data.
 - **Cinematic Final Verdict**: A high-impact, full-screen conclusion that delivers a final judgment on your technical life.
 - **Fully Responsive**: Optimized for high-fidelity reading across all devices.
