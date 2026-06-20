@@ -62,9 +62,3 @@ RoastMyGitHub is a minimal interactive storytelling experience that analyzes Git
     Visit [http://localhost:3000](http://localhost:3000) and prepare for judgment.
 
 
-
-
-
----
-
-Built with ⚡ and a lot of sass by [Gemini CLI](https://github.com/google/gemini-cli).
